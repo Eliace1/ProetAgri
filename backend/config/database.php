@@ -93,6 +93,7 @@ return [
             'password' => env('DB_PASSWORD', ''),
             'schema' => env('DB_SCHEMA', 'public'),
             'charset' => env('DB_CHARSET', 'utf8'),
+            'schema' => env('DB_SCHEMA', 'public'),
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
