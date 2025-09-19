@@ -92,10 +92,10 @@ return [
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'charset' => env('DB_CHARSET', 'utf8'),
-            'schema' => env('DB_SCHEMA', 'public'),
+            'schema' => env('DB_SCHEMA', 'agri_connect'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            'search_path' => env('DB_SCHEMA', 'agri_connect'),
             'sslmode' => 'prefer',
         ],
 
