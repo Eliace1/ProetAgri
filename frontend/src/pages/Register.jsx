@@ -13,6 +13,7 @@ export default function Register() {
     password: "",
     farmName: "",
     companyName: "",
+    address: "",
     documents: [],
     avatar: null,
   });
@@ -53,6 +54,7 @@ export default function Register() {
         email: form.email,
         phone: form.phone,
         password: form.password,
+        address: form.address,
         ...(role === "agriculteur" ? { farmName: form.farmName } : {}),
         ...(role === "acheteur" ? { companyName: form.companyName } : {}),
       };
@@ -64,6 +66,7 @@ export default function Register() {
         email: form.email,
         phone: form.phone,
         password: form.password,
+        address: form.address,
         farmName: form.farmName,
         companyName: form.companyName,
       }).forEach(([k, v]) => v != null && v !== "" && data.append(k, v));
