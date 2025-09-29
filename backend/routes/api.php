@@ -24,6 +24,9 @@ Route::get('/test', function (Request $request) {
 });
 
 
+//Route::apiResource('/',ProductController::class,'index');
+Route::get('/', [ProductController::class, 'index']); // GET /api/ -> index()
+
 // Accès public pour la liste et les détails des produits
 Route::get('products', [ProductController::class, 'index']); // GET /api/products -> index()
 Route::get('products/{product}', [ProductController::class, 'show']); // GET /api/products/1 -> show(1)
