@@ -91,11 +91,19 @@ return [
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
+<<<<<<< HEAD
             'charset' => env('DB_CHARSET', 'utf8'),
             'schema' => env('DB_SCHEMA', 'public'),
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
+=======
+            'schema' => env('DB_SCHEMA', 'argi_connect'),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => env('DB_SCHEMA','agri_connect'),
+>>>>>>> d80fa43f7ba7d2fe82c60ebe396999eaf6730fa3
             'sslmode' => 'prefer',
         ],
 
