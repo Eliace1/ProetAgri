@@ -1,9 +1,8 @@
 <?php
 
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 
 
@@ -34,15 +33,11 @@ Route::get('products/{product}', [ProductController::class, 'show']); // GET /ap
 //  3. CRUD PRODUITS (ROUTES PROTÉGÉES) 
 // Ces routes nécessitent d'être connecté (authentifié via le token Sanctum).
 Route::middleware('auth:sanctum')->group(function () {
-    
-    // Route de déconnexion (invalide le jeton actuel)
-    Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Routes pour la gestion des produits (Création, Modification, Suppression)
-    Route::apiResource('products', ProductController::class)->only([
-        'store',    // POST /api/products -> Crée un nouveau produit
-        'update',   // PUT/PATCH /api/products/1 -> Met à jour un produit
-        'destroy'   // DELETE /api/products/1 -> Supprime un produit
-    ]);
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
 });
+
+// Auth
+Route::post('/auth/register', [AuthController::class, 'register']);
 
