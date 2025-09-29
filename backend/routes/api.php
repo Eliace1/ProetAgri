@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +90,9 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 });
+
+// Auth
+Route::post('/auth/register', [AuthController::class, 'register']);
 
 // Routes pour les commandes (exemple)
 Route::prefix('orders')->group(function () {

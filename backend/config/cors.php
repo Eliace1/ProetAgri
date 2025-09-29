@@ -20,18 +20,20 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:5173',      // Vite dev server
-        'http://localhost:3000',      // Alternative React dev server
-        'http://127.0.0.1:5173',      // Vite dev server (127.0.0.1)
-        'http://127.0.0.1:3000',      // Alternative React dev server
-        'http://localhost:8080',      // Alternative frontend port
-        'https://your-production-domain.com', // Votre domaine de production
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:8080',
+        'https://your-production-domain.com',
     ],
 
     'allowed_origins_patterns' => [
-        // Permettre tous les sous-domaines localhost pour le développement
-        'http://localhost:*',
-        'http://127.0.0.1:*',
+        // Autoriser n'importe quel port sur localhost (regex Laravel CORS)
+        '#^http://localhost:\\d+$#',
+        '#^http://127\.0\.0\.1:\\d+$#',
     ],
 
     'allowed_headers' => ['*'],
