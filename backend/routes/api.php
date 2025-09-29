@@ -28,12 +28,9 @@ Route::get('/test', function (Request $request) {
 Route::get('products', [ProductController::class, 'index']); // GET /api/products -> index()
 Route::get('products/{product}', [ProductController::class, 'show']); // GET /api/products/1 -> show(1)
 
-//  3. CRUD PRODUITS (ROUTES PROTÉGÉES) 
+//  3. CRUD PRODUITS (ROUTES PROTÉGÉES)
 // Ces routes nécessitent d'être connecté (authentifié via le token Sanctum).
 Route::middleware('auth:sanctum')->group(function () {
-    
-    // Route de déconnexion (invalide le jeton actuel)
-    Route::post('/logout', [AuthController::class, 'logout']);
 
     // Routes pour la gestion des produits (Création, Modification, Suppression)
     Route::apiResource('products', ProductController::class)->only([
@@ -42,4 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
         'destroy'   // DELETE /api/products/1 -> Supprime un produit
     ]);
 });
+
+//Route pour l'enregistrement
+Route::post('/register',[AuthController::class,'signUp']);
+
+//route pour le login
+Route::post('/login',[AuthController::class,'signIn']);
 
