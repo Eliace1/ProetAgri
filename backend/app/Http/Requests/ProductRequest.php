@@ -21,13 +21,22 @@ class ProductRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name'=>['required','min:3'],
-            'description'=>['required','min:9'],
-            'name'=>['required'],
-            'description'=>['required','min:8'],
-            'reduction'=>['required'],
-            'price'=>['required']
+        $rules = [
+            'name'             => ['required', 'string', 'min:3', 'max:100'],
+            'description'      => ['required', 'string', 'min:10', 'max:500'],
+            'price'            => ['required', 'numeric', 'min:0.01'], 
+            'stock_quantity'   => ['required', 'integer', 'min:0'], 
+            'unit'             => ['required', 'string', 'in:kg,piece,litre,pack,botte'], 
+            'reduction'        => ['nullable', 'integer', 'min:0', 'max:100'],
+            'image'            => ['nullable', 'image', 'max:2048'], // Fichier image, max 2 Mo.
         ];
+        
+    // Cela permet à un utilisateur de n'envoyer que les champs qu'il souhaite modifier 
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+            $rules['name'] = ['sometimes', 'string', 'min:3', 'max:100'];
+            $rules['description'] = ['sometimes', 'string', 'min:10', 'max:500'];
+        }
+        
+        return $rules;
     }
 }
