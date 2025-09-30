@@ -25,12 +25,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'address',
+        // champs profil supplémentaires
         'phone',
-        'first_name',
-        'farmer',
-        'customer',
-        'admin'
+        'role',
+        'farm_name',
+        'company_name',
+        'avatar',
+        'identity_docs',
     ];
 
     /**
@@ -53,6 +54,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'identity_docs' => 'array',
         ];
     }
 
