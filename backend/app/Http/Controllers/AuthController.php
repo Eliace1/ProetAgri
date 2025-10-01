@@ -21,7 +21,12 @@ class AuthController extends Controller
 
     public function signIn(LoginRequest $request){
         if(Auth::attempt($request->only("email","password")))
+        {
+            $user=Auth::user();
+            $token = $user->createToken('auth_token')->plainTextToken;
+
             return response()->json(['message'=>'connexion réussie'],200);
+        }
         return response()->json(['message'=>'email ou mot de passe incorrect'],401);
     }
 }

@@ -45,4 +45,3 @@ Route::post('/register',[AuthController::class,'signUp']);
 
 //route pour le login
 Route::post('/login',[AuthController::class,'signIn']);
-
