@@ -74,6 +74,7 @@ body {
 .btn.white {
   background: white;
   color: #16a34a;
+  text-decoration: none;
 }
 
 .btn.white:hover {
@@ -84,11 +85,13 @@ body {
   border: 1px solid white;
   background: transparent;
   color: white;
+  
 }
 
 .btn.outline:hover {
   background: white;
   color: #16a34a;
+  
 }
 
 /* ====== HERO ====== */
@@ -142,6 +145,7 @@ body {
 }
 
 .category-card {
+
   border: 1px solid #e5e7eb;
   padding: 20px;
   border-radius: 8px;
@@ -332,6 +336,7 @@ main, .marketplace, .login-page {
 
 /* ====== PAGE LOGIN ====== */
 .login-page {
+  padding: 60px 20px;
   position: relative;
   min-height: calc(100vh - var(--footer-height));
   display: flex;
@@ -401,6 +406,31 @@ main, .marketplace, .login-page {
   border-color: #16a34a;
 }
 
+/* Container horizontal pour les radios */
+.role-selection {
+  display: flex;
+  justify-content: space-between; /* Agriculteur à gauche, Acheteur à droite */
+  margin-bottom: 15px;
+  padding: 0 4px; /* léger padding horizontal */
+}
+
+/* Label des radios */
+.role-selection label {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* espace entre bouton et texte */
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+}
+
+/* Boutons radios */
+.role-selection input[type="radio"] {
+  accent-color: #16a34a; /* vert pour cohérence avec ton design */
+  cursor: pointer;
+}
+
 .forgot {
   font-size: 13px;
   color: #16a34a;
@@ -452,6 +482,16 @@ main, .marketplace, .login-page {
   text-decoration: none;
   font-size: 14px;
   padding: 6px 12px;
+  background:#16a34a;
+  color:white;
+}
+
+.hero-buttons .btn.green {
+  text-decoration: none;
+  font-size: 14px;
+  padding: 6px 12px;
+  background:rgb(238, 233, 233);
+  color:green;
 }
 
 /* ====== RESPONSIVE DESIGN ====== */
@@ -871,6 +911,48 @@ main, .marketplace, .login-page {
   font-weight: 500;
   color: #374151;
 }
+/* ====== SLIDER (range input) ====== */
+input[type="range"] {
+  -webkit-appearance: none; /* supprime le style par défaut (Chrome/Safari) */
+  width: 100%;
+  height: 6px; /* épaisseur de la barre */
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Track (la barre bleue quand on sélectionne) */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #3b82f6; /* bleu */
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #3b82f6;
+}
+
+/* Thumb (le rond) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2563eb; /* bleu foncé */
+  cursor: pointer;
+  margin-top: -6px; /* ⚡ aligne verticalement le rond avec la barre */
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+}
+
 
 /* Catégories avec checkbox */
 .filter-categories ul {
@@ -1091,3 +1173,243 @@ main, .marketplace, .login-page {
 .marketplace-search input { width: 100%; padding: 10px 14px 10px 36px; border: 1px solid #e5e7eb; border-radius: 999px; outline: none; }
 .marketplace-search .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px; }
 .marketplace-avatar { width: 36px; height: 36px; border-radius: 999px; background: #e5e7eb center/cover no-repeat; border: 1px solid #e5e7eb; }
+
+/* ===== Page About (FarmLink Style) ===== */
+.about-page {
+  padding: 2rem 1rem;
+  max-width: 960px;
+  margin: 0 auto;
+  font-family: system-ui, sans-serif;
+  color: #1f2937; /* gris foncé */
+  
+}
+
+/* Header */
+.about-page header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.about-page h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: #065f46; /* vert foncé */
+}
+
+.about-page header p {
+  margin-top: 0.75rem;
+  font-size: 1.15rem;
+  color: #374151;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Section grid */
+.about-page section {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Cartes (articles) */
+.about-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  border-left: 6px solid #16a34a; /* accent vert */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.about-section:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.about-section h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #16a34a; /* vert accent */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Textes et listes */
+.about-section p,
+.about-section ul,
+.about-section ol {
+  margin: 0.75rem 0 0;
+  line-height: 1.8;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.about-section ul,
+.about-section ol {
+  padding-left: 1.25rem;
+}
+
+.about-section li::marker {
+  color: #16a34a; /* puces vertes */
+  font-weight: bold;
+}
+
+.about-section a {
+  color: #16a34a;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.about-section a:hover {
+  color: #065f46;
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .about-page section {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .about-page section {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+/* ===== Page Contact (FarmLink Style) ===== */
+.contact-bg {
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* Overlay assombri pour lisibilité */
+.contact-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Contenu */
+.contact-page {
+  position: relative;
+  z-index: 1;
+  padding: 3rem 1rem;
+  max-width: 960px;
+  margin: 0 auto;
+  color: #1f2937;
+}
+
+/* Header */
+.contact-page header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.contact-page h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.contact-page header p {
+  margin-top: 0.75rem;
+  font-size: 1.1rem;
+  color: #d1d5db;
+}
+
+/* Sections */
+.contact-page section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.contact-page section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.contact-page h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #16a34a;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* Formulaire */
+.contact-form label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.contact-form input,
+.contact-form textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+
+/* Bouton envoyer */
+.btn-submit {
+  background: #16a34a;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.btn-submit:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.btn-submit:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Coordonnées */
+.contact-page a {
+  color: #16a34a;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.contact-page a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .contact-page > div {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+  }
+}

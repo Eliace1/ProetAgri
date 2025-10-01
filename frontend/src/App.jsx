@@ -11,6 +11,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Orders from "./pages/Orders";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProfilAgriculteur from "./pages/ProfilAgriculteur";
+import ProfilAcheteur from "./pages/ProfilAcheteur";
 
 import "./index.css";
 
@@ -66,6 +68,9 @@ export default function App() {
             </>
           }
         />
+
+        <Route path="/profil-agriculteur" element={<ProfilAgriculteur />} />
+        <Route path="/profil-acheteur" element={<ProfilAcheteur />} />
 
         {/* ✅ Nouvelle route Marché */}
         <Route path="/marche" element={<Marketplace />} />
