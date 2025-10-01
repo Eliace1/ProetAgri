@@ -6,6 +6,8 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
 
 class ProductController extends Controller
 {
@@ -28,13 +30,18 @@ class ProductController extends Controller
         // Récupère l'utilisateur connecté
         $user = Auth::user();
 
-        // 1. VÉRIFICATION DU RÔLE : Seuls les agriculteurs peuvent ajouter des produits.
+        // VÉRIFICATION DU RÔLE : Seuls les agriculteurs peuvent ajouter des produits.
         if (!$user || $user->role !== 'agriculteur') {
             return response()->json(['message' => 'Accès refusé. Seuls les agriculteurs sont autorisés à ajouter des produits.'], 403);
         }
         
-        // 2. Création du produit
+        // Création du produit
         // Nous fusionnons les données validées de la requête avec l'ID de l'utilisateur connecté.
+        
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        }
+
         $product = Product::create(array_merge($request->validated(), [
             'user_id' => $user->id,
         ]));
@@ -67,6 +74,14 @@ class ProductController extends Controller
         }
 
         // 2. Mise à jour du produit
+        if ($request->hasFile('image')) {
+            // Supprimer l'ancienne image
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        }
+
         $product->update($request->validated());
 
         return response()->json([
@@ -87,6 +102,10 @@ class ProductController extends Controller
         }
 
         // 2. Suppression du produit
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
 
         return response()->json([
