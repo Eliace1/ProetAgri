@@ -30,12 +30,12 @@ class ProductController extends Controller
         // Récupère l'utilisateur connecté
         $user = Auth::user();
 
-        // 1. VÉRIFICATION DU RÔLE : Seuls les agriculteurs peuvent ajouter des produits.
+        // VÉRIFICATION DU RÔLE : Seuls les agriculteurs peuvent ajouter des produits.
         if (!$user || $user->role !== 'agriculteur') {
             return response()->json(['message' => 'Accès refusé. Seuls les agriculteurs sont autorisés à ajouter des produits.'], 403);
         }
         
-        // 2. Création du produit
+        // Création du produit
         // Nous fusionnons les données validées de la requête avec l'ID de l'utilisateur connecté.
         
         if ($request->hasFile('image')) {
