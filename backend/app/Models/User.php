@@ -25,13 +25,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        // champs profil supplémentaires
+        'address',
         'phone',
-        'role',
-        'farm_name',
-        'company_name',
-        'avatar',
-        'identity_docs',
+        'first_name',
+        'farmer',
+        'customer',
+        'admin'
     ];
 
     /**
@@ -54,7 +53,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'identity_docs' => 'array',
         ];
     }
 
@@ -68,4 +66,19 @@ class User extends Authenticatable
             ->map(fn (string $name) => Str::of($name)->substr(0, 1))
             ->implode('');
     }
+
+    /**
+     *Retourne tous les produits d'un agriculteur
+     */
+    public function products() {
+        return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Retourne une commande pour un client
+     */
+    public function commandes() {
+        return $this->hasMany(Commande::class);
+    }
+
 }
