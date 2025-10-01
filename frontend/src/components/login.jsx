@@ -6,63 +6,76 @@ import { saveAuth } from "../lib/auth";
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [identifier, setIdentifier] = useState(""); // email ou téléphone
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState(""); // rôle choisi (agriculteur ou acheteur)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_URL = import.meta?.env?.VITE_API_URL || "http://127.0.0.1:8000"; // adapte si besoin
+  const API_URL = import.meta?.env?.VITE_API_URL || "http://127.0.0.1:8000";
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ identifier, password }),
-        credentials: "include", // si le backend pose un cookie, sinon enlever
-      });
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-      if (!res.ok) {
-        // Fallback: accepte toute connexion tant que le backend n'est pas prêt
-        const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-        saveAuth(fakeUser, "dev-token");
-      } else {
-        const data = await res.json().catch(() => ({}));
-        if (data?.user || data?.token) {
-          saveAuth(data.user || null, data.token || "");
-        } else {
-          const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-          saveAuth(fakeUser, "dev-token");
-        }
-      }
+  try {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ identifier, password }),
+      credentials: "include",
+    });
 
-      // Redirige vers la page d'origine si présente, sinon accueil
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
-    } catch (err) {
-      // Fallback total si erreur réseau: accepter quand même
+    if (!res.ok) {
+      // fallback dev
       const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
       saveAuth(fakeUser, "dev-token");
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
-    } finally {
-      setLoading(false);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      if (data?.user || data?.token) {
+        saveAuth(data.user || null, data.token || "");
+      } else {
+        const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
+        saveAuth(fakeUser, "dev-token");
+      }
     }
-  };
+
+    // 🚀 Redirection uniquement selon rôle choisi
+    if (role === "agriculteur") {
+      navigate("/profil-agriculteur");
+    } else if (role === "acheteur") {
+      navigate("/profil-acheteur");
+    } else {
+      setError("Veuillez sélectionner un rôle avant de continuer.");
+    }
+
+  } catch (err) {
+    // fallback total
+    const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
+    saveAuth(fakeUser, "dev-token");
+
+    if (role === "agriculteur") {
+      navigate("/profil-agriculteur");
+    } else if (role === "acheteur") {
+      navigate("/profil-acheteur");
+    } else {
+      navigate("/");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <>
       <div className="login-page">
         <div className="login-container">
           <h2>Se connecter</h2>
-          <p className="subtitle">
-            Entrez vos informations pour accéder à votre compte FarmLink.
-          </p>
+          <p className="subtitle">Entrez vos informations pour accéder à votre compte FarmLink.</p>
 
           <form className="login-form" onSubmit={handleSubmit}>
             <label>Adresse e-mail ou numéro de téléphone</label>
@@ -83,6 +96,32 @@ export default function Login() {
               required
             />
 
+            {/* Boutons radio */}
+            <div className="role-selection">
+              <label>
+                <input
+                  type="radio"
+                  name="role"
+                  value="agriculteur"
+                  checked={role === "agriculteur"}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                />{" "}
+                Agriculteur
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="role"
+                  value="acheteur"
+                  checked={role === "acheteur"}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                />{" "}
+                Acheteur
+              </label>
+            </div>
+
             <a href="#" className="forgot">Mot de passe oublié ?</a>
 
             {error && (
@@ -102,7 +141,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Footer ajouté ici */}
       <Footer />
     </>
   );

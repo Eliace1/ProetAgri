@@ -28,14 +28,6 @@ export default function Products() {
           <button>Ajouter au panier</button>
         </div>
 
-        {/* Pain */}
-        <div className="product-card">
-          <img src="/images/pain.jpg" alt="Pain artisanal" />
-          <h3>Pain Artisanal (Une Miche)</h3>
-          <p className="price">3,50€</p>
-          <button>Ajouter au panier</button>
-        </div>
-
       </div>
     </section>
   );
