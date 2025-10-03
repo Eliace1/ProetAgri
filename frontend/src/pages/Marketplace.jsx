@@ -84,6 +84,16 @@ export default function Marketplace() {
   // Fonction de normalisation pour éviter les erreurs de casse ou d'accent
   const normalize = (str) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
+  /*___________A RETENIR__________
+    / Fonction de normalisation pour comparer des chaînes de texte sans être gêné par les accents ou les majuscules
+const normalize = (str) => 
+  str // prend une chaîne de caractères en entrée
+    ?.normalize("NFD") // transforme les caractères accentués en leur forme décomposée (ex: "é" devient "e" + accent)
+    .replace(/[\u0300-\u036f]/g, "") // supprime tous les caractères d'accent (diacritiques) grâce à une expression régulière
+    .toLowerCase(); // convertit la chaîne en minuscules pour éviter les erreurs de casse
+  
+  */
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (searchText && !p.name.toLowerCase().includes(searchText.toLowerCase())) return false;
