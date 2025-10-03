@@ -49,7 +49,8 @@ export default function Products() {
       <div className="product-list">
         {products.map((product) => (
           <div key={product.id} className="product-card">
-            <img src={`${import.meta.env.VITE_BACKEND_URL.replace('/api', '')}/storage/${product.image}`} alt={product.name} />
+             <img src={product.image} alt={product.name} />
+            {/* <img src={`${import.meta.env.VITE_BACKEND_URL.replace('/api', '')}/storage/${product.image}`} alt={product.name} /> */}
             <h3>{product.name}</h3>
             <p className="price">{formatPrice(product.price)}</p>
             <button onClick={() => onAdd(product)}>Ajouter au panier</button>

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->longText('description');
             $table->double('reduction');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('categorie_id')->constrained('catégories')->onDelete('cascade');
         });
     }
 
@@ -32,6 +33,8 @@ return new class extends Migration
         Schema::table('produits', function (Blueprint $table) {
         $table->dropForeign(['user_id']);
         $table->dropColumn('user_id');
+        $table->dropForeign(['categorie_id']);
+        $table->dropColumn('categorie_id');
 });
 
     }

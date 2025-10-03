@@ -26,6 +26,16 @@ class Product extends Model
         return $this->belongsTo(User::class);
     }
 
+     /**
+     *
+     * Retourne la liste des catégorie d'un produits
+     */
+    public function categorie()
+{
+    return $this->belongsTo(Categorie::class);
+}
+
+
 
 
     /**

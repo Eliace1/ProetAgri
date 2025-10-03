@@ -4,85 +4,94 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-
 
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     * Affiche la liste de TOUS les produits (accessible à tous).
+     * Affiche la liste de tous les produits avec leur catégorie.
      */
-    public function index()
+   public function index(): JsonResponse
     {
-        // Récupère tous les produits disponibles de la base de données.
-        return response()->json(Product::all(), 200);
+        $products = Product::with('categorie')->get();
+
+        $transformed = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'qte' => $product->qte,
+                'image' => $product->image,
+                'category' => $product->categorie->name ?? null,
+                'description' => $product->description,
+            ];
+        });
+
+        return response()->json($transformed, 200);
     }
 
+
+
     /**
-     * Store a newly created resource in storage.
-     * Stocke un nouveau produit (Vérification : Rôle 'agriculteur').
+     * Stocke un nouveau produit (réservé aux agriculteurs).
      */
-    public function store(ProductRequest $request)
+    public function store(ProductRequest $request): JsonResponse
     {
-        // Récupère l'utilisateur connecté
         $user = Auth::user();
 
-        // VÉRIFICATION DU RÔLE : Seuls les agriculteurs peuvent ajouter des produits.
         if (!$user || $user->role !== 'agriculteur') {
-            return response()->json(['message' => 'Accès refusé. Seuls les agriculteurs sont autorisés à ajouter des produits.'], 403);
+            return response()->json([
+                'message' => 'Accès refusé. Seuls les agriculteurs peuvent ajouter des produits.'
+            ], 403);
         }
-        
-        // Création du produit
-        // Nous fusionnons les données validées de la requête avec l'ID de l'utilisateur connecté.
-        
+
+        $validated = $request->validated();
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
-        $product = Product::create(array_merge($request->validated(), [
+        $product = Product::create(array_merge($validated, [
             'user_id' => $user->id,
         ]));
-        
+
         return response()->json([
             'message' => 'Produit ajouté avec succès.',
             'product' => $product
-        ], 201); // Code 201 pour "Created"
+        ], 201);
     }
 
     /**
-     * Display the specified resource.
      * Affiche les détails d'un produit spécifique.
      */
-    public function show(Product $product)
+    public function show(Product $product): JsonResponse
     {
-        //  Retourne simplement le produit trouvé.
         return response()->json($product, 200);
     }
 
     /**
-     * Update the specified resource in storage.
-     * Met à jour un produit existant (Vérification : Propriété de l'auteur).
+     * Met à jour un produit existant (réservé au propriétaire).
      */
-    public function update(ProductRequest $request, Product $product)
+    public function update(ProductRequest $request, Product $product): JsonResponse
     {
-        // 1. VÉRIFICATION D'AUTEUR : L'utilisateur connecté est-il le créateur (propriétaire) du produit ?
         if (Auth::id() !== $product->user_id) {
-            return response()->json(['message' => 'Accès refusé. Vous ne pouvez modifier que vos propres produits.'], 403);
+            return response()->json([
+                'message' => 'Accès refusé. Vous ne pouvez modifier que vos propres produits.'
+            ], 403);
         }
 
-        // 2. Mise à jour du produit
+        $validated = $request->validated();
+
         if ($request->hasFile('image')) {
-            // Supprimer l'ancienne image
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
-        $product->update($request->validated());
+        $product->update($validated);
 
         return response()->json([
             'message' => 'Produit mis à jour avec succès.',
@@ -91,17 +100,16 @@ class ProductController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     * Supprime un produit (Vérification : Propriété de l'auteur).
+     * Supprime un produit (réservé au propriétaire).
      */
-    public function destroy(Product $product)
+    public function destroy(Product $product): JsonResponse
     {
-        // 1. VÉRIFICATION D'AUTEUR
         if (Auth::id() !== $product->user_id) {
-            return response()->json(['message' => 'Accès refusé. Vous ne pouvez supprimer que vos propres produits.'], 403);
+            return response()->json([
+                'message' => 'Accès refusé. Vous ne pouvez supprimer que vos propres produits.'
+            ], 403);
         }
 
-        // 2. Suppression du produit
         if ($product->image) {
             Storage::disk('public')->delete($product->image);
         }
@@ -110,6 +118,6 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'Produit supprimé avec succès.'
-        ], 204); // Code 204 pour "No Content" (suppression réussie)
+        ], 204);
     }
 }

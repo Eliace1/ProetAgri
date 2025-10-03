@@ -7,3 +7,7 @@ export const fetchProducts = async () => {
   return response.data;
 };
 
+export async function fetchCategories() {
+  const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/categories`);
+  return res.data;
+}
