@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import { getUser } from "../lib/auth";
 import { getCart } from "../lib/cart";
 import { FaShoppingCart } from "react-icons/fa";
-import { fetchProducts } from "../lib/api"; // ← nouvelle importation
+import { fetchProducts, fetchCategories } from "../lib/api";
 
 export default function Marketplace() {
   const [searchParams] = useSearchParams();
@@ -17,9 +17,10 @@ export default function Marketplace() {
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
   const navigate = useNavigate();
 
-  // Récupère les produits depuis Laravel
+  // Récupère les produits et les catégories depuis Laravel
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -29,7 +30,18 @@ export default function Marketplace() {
         console.error("Erreur lors du chargement des produits :", error);
       }
     };
+
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        setAvailableCategories(data.map((cat) => cat.name));
+      } catch (error) {
+        console.error("Erreur lors du chargement des catégories :", error);
+      }
+    };
+
     loadProducts();
+    loadCategories();
   }, []);
 
   useEffect(() => {
@@ -69,12 +81,25 @@ export default function Marketplace() {
     setSearchText(q);
   }, [searchParams]);
 
+  // Fonction de normalisation pour éviter les erreurs de casse ou d'accent
+  const normalize = (str) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (searchText && !p.name.toLowerCase().includes(searchText.toLowerCase())) return false;
-      if (selectedCategories.length && !selectedCategories.includes(p.category)) return false;
-      if (selectedAvailability.length && !selectedAvailability.includes(p.stock)) return false;
+
+      if (
+        selectedCategories.length &&
+        (!p.category || !selectedCategories.some((cat) => normalize(cat) === normalize(p.category)))
+      ) return false;
+
+      if (
+        selectedAvailability.length &&
+        (!p.stock || !selectedAvailability.includes(p.stock))
+      ) return false;
+
       if (p.price < priceRange.min || p.price > priceRange.max) return false;
+
       return true;
     });
   }, [searchText, selectedCategories, selectedAvailability, priceRange, products]);
@@ -93,9 +118,11 @@ export default function Marketplace() {
             priceRange={priceRange}
             setPriceRange={setPriceRange}
             maxPrice={maxPrice}
+            availableCategories={availableCategories}
           />
           <ProductsGrid products={filteredProducts} />
         </div>
+
         <button
           aria-label="Voir le panier / commandes"
           onClick={() => navigate('/commandes')}

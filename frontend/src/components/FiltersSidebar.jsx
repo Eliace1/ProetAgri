@@ -1,38 +1,32 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 
 export default function FiltersSidebar({
-  searchText,
-  setSearchText,
+  // searchText,
+  // setSearchText,
   selectedCategories,
   setSelectedCategories,
-  selectedAvailability,
-  setSelectedAvailability,
+  // selectedAvailability,
+  // setSelectedAvailability,
   priceRange,
   setPriceRange,
   maxPrice = 100,
+  availableCategories,
 }) {
-  const [allCategories, setAllCategories] = useState([]);
   const [allStocks, setAllStocks] = useState([]);
 
-  // 🔄 Récupère les produits pour extraire les filtres dynamiques
+  // 🔄 Récupère les stocks dynamiques depuis les produits
   useEffect(() => {
-    const fetchFilters = async () => {
+    const fetchStocks = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/products`);
-        const products = response.data;
-
-        const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/products`);
+        const products = await response.json();
         const stocks = [...new Set(products.map(p => p.stock).filter(Boolean))];
-
-        setAllCategories(categories);
         setAllStocks(stocks);
       } catch (error) {
-        console.error("Erreur lors du chargement des filtres :", error);
+        console.error("Erreur lors du chargement des stocks :", error);
       }
     };
-
-    fetchFilters();
+    fetchStocks();
   }, []);
 
   const handleCategoryChange = (category) => {
@@ -43,13 +37,13 @@ export default function FiltersSidebar({
     }
   };
 
-  const handleStockChange = (stock) => {
-    if (selectedAvailability.includes(stock)) {
-      setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
-    } else {
-      setSelectedAvailability([...selectedAvailability, stock]);
-    }
-  };
+  // const handleStockChange = (stock) => {
+  //   if (selectedAvailability.includes(stock)) {
+  //     setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
+  //   } else {
+  //     setSelectedAvailability([...selectedAvailability, stock]);
+  //   }
+  // };
 
   return (
     <aside className="filters-sidebar">
@@ -120,7 +114,7 @@ export default function FiltersSidebar({
       <div className="filter-block filter-categories">
         <h4>Catégorie</h4>
         <ul>
-          {allCategories.map((cat) => (
+          {availableCategories.map((cat) => (
             <li key={cat}>
               <label>
                 <input
@@ -136,7 +130,7 @@ export default function FiltersSidebar({
       </div>
 
       {/* Disponibilité dynamique */}
-      <div className="filter-block filter-stock">
+      {/* <div className="filter-block filter-stock">
         <h4>Disponibilité</h4>
         {allStocks.map((stock) => (
           <label key={stock}>
@@ -148,7 +142,7 @@ export default function FiltersSidebar({
             {stock}
           </label>
         ))}
-      </div>
+      </div> */}
     </aside>
   );
 }
