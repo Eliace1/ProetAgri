@@ -12,7 +12,6 @@ export default function Marketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchText, setSearchText] = useState(searchParams.get("q") || "");
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedAvailability, setSelectedAvailability] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100 });
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
@@ -74,14 +73,20 @@ export default function Marketplace() {
 
   // === filtrage combiné ===
   const filteredProducts = useMemo(() => {
+    const knownCategories = ["Fruits", "Légumes", "Céréales", "Produits laitiers", "Viande"];
+    const wantsAutres = selectedCategories.includes("Autres");
     return products.filter((p) => {
       if (searchText && !p.name.toLowerCase().includes(searchText.toLowerCase())) return false;
-      if (selectedCategories.length && !selectedCategories.includes(p.category)) return false;
-      if (selectedAvailability.length && !selectedAvailability.includes(p.stock)) return false;
+      if (selectedCategories.length) {
+        const isKnown = knownCategories.includes(p.category);
+        const matchKnown = selectedCategories.includes(p.category);
+        const matchAutres = wantsAutres && !isKnown;
+        if (!(matchKnown || matchAutres)) return false;
+      }
       if (p.price < priceRange.min || p.price > priceRange.max) return false;
       return true;
     });
-  }, [searchText, selectedCategories, selectedAvailability, priceRange, products]);
+  }, [searchText, selectedCategories, priceRange, products]);
 
   return (
     <>
@@ -92,8 +97,6 @@ export default function Marketplace() {
             setSearchText={setSearchText}
             selectedCategories={selectedCategories}
             setSelectedCategories={setSelectedCategories}
-            selectedAvailability={selectedAvailability}
-            setSelectedAvailability={setSelectedAvailability}
             priceRange={priceRange}
             setPriceRange={setPriceRange}
             maxPrice={maxPrice}

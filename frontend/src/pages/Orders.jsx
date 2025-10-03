@@ -84,6 +84,9 @@ export default function Orders() {
               <Link to="/marche" className="btn" style={{ background: '#2563eb', color: '#fff', padding: '10px 16px', borderRadius: 8 }}>
                 Continuer mes achats
               </Link>
+              <Link to="/checkout" className="btn" style={{ background: '#16a34a', color: '#fff', padding: '10px 16px', borderRadius: 8 }}>
+                Passer la commande
+              </Link>
               <button
                 onClick={() => updateAndPersist([])}
                 className="btn"

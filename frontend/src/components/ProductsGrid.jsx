@@ -33,9 +33,8 @@ export default function ProductsGrid({ products = fallbackProducts }) {
       return;
     }
     addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
-    // feedback simple
+    // feedback non bloquant via event (utilisé par le compteur panier)
     try { window?.dispatchEvent(new CustomEvent('cart:add', { detail: { id: product.id } })); } catch {}
-    alert('Produit ajouté au panier');
   }, [navigate, location]);
 
   return (
@@ -45,10 +44,10 @@ export default function ProductsGrid({ products = fallbackProducts }) {
           <img src={product.image} alt={product.name} />
           <h4>{product.name}</h4>
           <p className="price">{formatPrice(product.price)}</p>
-          <span className={`stock ${String(product.stock).replace(/\s+/g, "-").toLowerCase()}`}>
-          
-            {product.stock}
-          </span>
+          <p className="farm">Ferme: <strong>{product.farmName || "Ferme locale"}</strong></p>
+          {isLoggedIn() && (product.farmAddress || product.farm_address) && (
+            <p className="farm-address">Adresse: {product.farmAddress || product.farm_address}</p>
+          )}
           <button onClick={() => onAdd(product)}>Ajouter au panier</button>
         </div>
       ))}

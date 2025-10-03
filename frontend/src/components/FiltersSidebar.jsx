@@ -5,8 +5,6 @@ export default function FiltersSidebar({
   setSearchText,
   selectedCategories,
   setSelectedCategories,
-  selectedAvailability,
-  setSelectedAvailability,
   priceRange,
   setPriceRange,
   maxPrice = 100,
@@ -20,14 +18,7 @@ export default function FiltersSidebar({
     }
   };
 
-  // ✅ gérer changement de disponibilité
-  const handleStockChange = (stock) => {
-    if (selectedAvailability.includes(stock)) {
-      setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
-    } else {
-      setSelectedAvailability([...selectedAvailability, stock]);
-    }
-  };
+  // disponibilité retirée
 
   return (
     <aside className="filters-sidebar">
@@ -105,36 +96,19 @@ export default function FiltersSidebar({
       <div className="filter-block filter-categories">
         <h4>Catégorie</h4>
         <ul>
-          {["Fruits", "Légumes", "Céréales", "Produits laitiers", "Viande"].map(
-            (cat) => (
-              <li key={cat}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(cat)}
-                    onChange={() => handleCategoryChange(cat)}
-                  />{" "}
-                  {cat}
-                </label>
-              </li>
-            )
-          )}
+          {["Fruits", "Légumes", "Céréales", "Produits laitiers", "Viande", "Autres"].map((cat) => (
+            <li key={cat}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(cat)}
+                  onChange={() => handleCategoryChange(cat)}
+                />{" "}
+                {cat}
+              </label>
+            </li>
+          ))}
         </ul>
-      </div>
-
-      {/* Disponibilité */}
-      <div className="filter-block filter-stock">
-        <h4>Disponibilité</h4>
-        {["En stock", "Faible stock", "Rupture de stock"].map((stock) => (
-          <label key={stock}>
-            <input
-              type="checkbox"
-              checked={selectedAvailability.includes(stock)}
-              onChange={() => handleStockChange(stock)}
-            />{" "}
-            {stock}
-          </label>
-        ))}
       </div>
     </aside>
   );

@@ -7,22 +7,28 @@ import { registerUser } from "../api/auth";
 export default function Register() {
   const [role, setRole] = useState("agriculteur"); // "agriculteur" | "acheteur"
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     password: "",
+    confirmPassword: "",
     farmName: "",
-    companyName: "",
-    address: "",
+    farmAddress: "",
+    companyName: "", // utilisé pour l'adresse acheteur (compat backend)
     documents: [],
-    avatar: null,
   });
-  const [avatarPreview, setAvatarPreview] = useState("");
+  
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+    // clear field error on change
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
   const handleFiles = (files) => {
@@ -30,13 +36,7 @@ export default function Register() {
     setForm((f) => ({ ...f, documents: fileList }));
   };
 
-  const handleAvatar = (file) => {
-    if (!file) return;
-    setForm((f) => ({ ...f, avatar: file }));
-    const reader = new FileReader();
-    reader.onload = () => setAvatarPreview(reader.result?.toString() || "");
-    reader.readAsDataURL(file);
-  };
+  // Avatar supprimé
 
   const onDrop = (e) => {
     e.preventDefault();
@@ -44,40 +44,93 @@ export default function Register() {
     handleFiles(e.dataTransfer.files);
   };
 
+  const validate = () => {
+    const e = {};
+    const emailRe = /.+@.+\..+/;
+    // Champs de base
+    if (!form.firstName?.trim()) e.firstName = "Le prénom est obligatoire.";
+    if (!form.lastName?.trim()) e.lastName = "Le nom est obligatoire.";
+    if (!form.email?.trim()) e.email = "L'email est obligatoire.";
+    else if (!emailRe.test(form.email)) e.email = "Format d'email invalide.";
+    if (!form.phone?.trim()) e.phone = "Le téléphone est obligatoire.";
+    // Mot de passe
+    if (!form.password) e.password = "Le mot de passe est obligatoire.";
+    else if (form.password.length < 6) e.password = "Minimum 6 caractères.";
+    if (!form.confirmPassword) e.confirmPassword = "Veuillez confirmer le mot de passe.";
+    else if (form.password !== form.confirmPassword) e.confirmPassword = "Les mots de passe ne correspondent pas.";
+    // Champs selon rôle
+    if (role === "acheteur" && (!form.companyName || !form.companyName.trim())) {
+      e.companyName = "L'adresse de livraison est obligatoire.";
+    }
+    if (role === "agriculteur" && (!form.farmAddress || !form.farmAddress.trim())) {
+      e.farmAddress = "L'adresse de la ferme est obligatoire.";
+    }
+    return e;
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    const v = validate();
+    if (Object.keys(v).length) {
+      setErrors(v);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const payload = {
         role,
-        name: form.name,
+        name: `${form.firstName?.trim() || ""} ${form.lastName?.trim() || ""}`.trim(),
+        first_name: form.firstName,
+        last_name: form.lastName,
         email: form.email,
         phone: form.phone,
         password: form.password,
-        address: form.address,
-        ...(role === "agriculteur" ? { farmName: form.farmName } : {}),
-        ...(role === "acheteur" ? { companyName: form.companyName } : {}),
+        password_confirmation: form.confirmPassword,
+        ...(role === "agriculteur" ? { farmName: form.farmName, farmAddress: form.farmAddress } : {}),
+        ...(role === "acheteur" ? { companyName: form.companyName, address: form.companyName } : {}),
       };
 
       const data = new FormData();
       Object.entries({
         role,
-        name: form.name,
+        name: `${form.firstName?.trim() || ""} ${form.lastName?.trim() || ""}`.trim(),
+        first_name: form.firstName,
+        last_name: form.lastName,
         email: form.email,
         phone: form.phone,
         password: form.password,
-        address: form.address,
+        password_confirmation: form.confirmPassword,
         farmName: form.farmName,
+        farmAddress: form.farmAddress,
         companyName: form.companyName,
+        address: form.companyName,
       }).forEach(([k, v]) => v != null && v !== "" && data.append(k, v));
-      if (form.avatar) data.append("avatar", form.avatar);
       form.documents.forEach((f) => data.append("documents[]", f));
 
-      const hasFiles = !!form.avatar || (form.documents && form.documents.length > 0);
+      const hasFiles = (form.documents && form.documents.length > 0);
       const resp = await registerUser(hasFiles ? data : payload, hasFiles);
       const { user, token } = resp || {};
-      saveAuth(user || { name: form.name, email: form.email, role, avatar: avatarPreview }, token || "");
-      alert("Inscription réussie !");
+
+      // Enrichit l'utilisateur sauvegardé si le backend n'envoie pas ces champs
+      const fallbackUser = {
+        name: `${form.firstName?.trim() || ""} ${form.lastName?.trim() || ""}`.trim(),
+        first_name: form.firstName,
+        last_name: form.lastName,
+        email: form.email,
+        role,
+        ...(role === "agriculteur" ? { farmName: form.farmName, farm_address: form.farmAddress } : {}),
+        ...(role === "acheteur" ? { companyName: form.companyName } : {}),
+      };
+      const userToSave = user ? {
+        ...user,
+        ...(role === "agriculteur" && !user.farmName && !user.farm_name ? { farmName: form.farmName } : {}),
+        ...(role === "agriculteur" && !user.farm_address ? { farm_address: form.farmAddress } : {}),
+        ...(role === "acheteur" && !user.companyName && !user.company_name ? { companyName: form.companyName } : {}),
+      } : fallbackUser;
+      saveAuth(userToSave, token || "");
+      // Optionnel: toast/redirect; on garde le flow actuel
     } catch (err) {
       const status = err?.response?.status;
       const data = err?.response?.data;
@@ -85,14 +138,40 @@ export default function Register() {
       let message = "Une erreur est survenue. Réessayez.";
       if (data) {
         if (typeof data === 'object') {
-          message = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : message);
+          if (data.errors && typeof data.errors === 'object') {
+            // Mappe les erreurs backend sur les champs
+            const mapped = {};
+            Object.entries(data.errors).forEach(([k, v]) => {
+              const msg = Array.isArray(v) ? v.join(' ') : String(v);
+              if (k === 'password' || k === 'password_confirmation') {
+                mapped.confirmPassword = msg;
+              } else if (k === 'email') {
+                mapped.email = msg;
+              } else if (k === 'name' || k === 'first_name' || k === 'last_name') {
+                // si l'API renvoie une erreur de nom, l'afficher côté lastName par défaut
+                mapped.lastName = msg;
+              } else if (k === 'phone') {
+                mapped.phone = msg;
+              } else if (k === 'farmAddress' || k === 'farm_address') {
+                mapped.farmAddress = msg;
+              } else if (k === 'companyName' || k === 'company_name' || k === 'address') {
+                mapped.companyName = msg;
+              } else {
+                mapped.server = (mapped.server ? mapped.server + '\n' : '') + msg;
+              }
+            });
+            setErrors(mapped);
+            message = data.message || message;
+          } else {
+            message = data.message || message;
+          }
         } else if (typeof data === 'string') {
           message = `Erreur ${status || ''}`.trim() + `\n` + data.slice(0, 300);
         }
       } else if (err?.message) {
         message = err.message;
       }
-      alert(message);
+      if (!data?.errors) alert(message);
     } finally {
       setSubmitting(false);
     }
@@ -107,43 +186,44 @@ export default function Register() {
         </p>
 
         <form onSubmit={onSubmit} className="register-form">
-          {/* Photo de profil (optionnelle) */}
-          <div className="form-field">
-            <label className="form-label">Photo de profil (optionnel)</label>
-            <div className="avatar-row">
-              <div className="avatar-preview" style={{ backgroundImage: `url(${avatarPreview || "/images/avatar-placeholder.png"})` }} />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleAvatar(e.target.files?.[0])}
-              />
-            </div>
-          </div>
           <div className="row-2">
+            <div className="form-field">
+              <label className="form-label">Prénom</label>
+              <input
+                type="text"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                placeholder="Entrez votre prénom"
+                className="form-input"
+              />
+              {errors.firstName && (<div className="field-error">{errors.firstName}</div>)}
+            </div>
             <div className="form-field">
               <label className="form-label">Nom</label>
               <input
                 type="text"
-                name="name"
-                value={form.name}
+                name="lastName"
+                value={form.lastName}
                 onChange={handleChange}
                 placeholder="Entrez votre nom"
-                required
                 className="form-input"
               />
+              {errors.lastName && (<div className="field-error">{errors.lastName}</div>)}
             </div>
-            <div className="form-field">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Entrez votre email"
-                required
-                className="form-input"
-              />
-            </div>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Entrez votre email"
+              className="form-input"
+            />
+            {errors.email && (<div className="field-error">{errors.email}</div>)}
           </div>
 
           <div className="row-2">
@@ -155,22 +235,45 @@ export default function Register() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="Entrez votre numéro de téléphone"
-                required
                 className="form-input"
               />
+              {errors.phone && (<div className="field-error">{errors.phone}</div>)}
             </div>
             <div className="form-field">
               <label className="form-label">Mot de passe</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Créez un mot de passe sécurisé"
+                  className="form-input"
+                />
+                <button type="button" onClick={() => setShowPassword(s => !s)} className="btn-toggle" aria-label="Afficher/masquer le mot de passe" style={{ minWidth: 90 }}>
+                  {showPassword ? 'Masquer' : 'Afficher'}
+                </button>
+              </div>
+              {errors.password && (<div className="field-error">{errors.password}</div>)}
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label className="form-label">Confirmer le mot de passe</label>
+            <div style={{ display: 'flex', gap: 8 }}>
               <input
-                type="password"
-                name="password"
-                value={form.password}
+                type={showConfirm ? "text" : "password"}
+                name="confirmPassword"
+                value={form.confirmPassword}
                 onChange={handleChange}
-                placeholder="Créez un mot de passe sécurisé"
-                required
+                placeholder="Ressaisissez votre mot de passe"
                 className="form-input"
               />
+              <button type="button" onClick={() => setShowConfirm(s => !s)} className="btn-toggle" aria-label="Afficher/masquer la confirmation" style={{ minWidth: 90 }}>
+                {showConfirm ? 'Masquer' : 'Afficher'}
+              </button>
             </div>
+            {errors.confirmPassword && (<div className="field-error">{errors.confirmPassword}</div>)}
           </div>
 
           <div className="form-field">
@@ -207,17 +310,33 @@ export default function Register() {
             </div>
           )}
 
+          {role === "agriculteur" && (
+            <div className="form-field">
+              <label className="form-label">Adresse de la Ferme</label>
+              <input
+                type="text"
+                name="farmAddress"
+                value={form.farmAddress}
+                onChange={handleChange}
+                placeholder="Entrez l'adresse de votre ferme"
+                className="form-input"
+              />
+              {errors.farmAddress && (<div className="field-error">{errors.farmAddress}</div>)}
+            </div>
+          )}
+
           {role === "acheteur" && (
             <div className="form-field">
-              <label className="form-label">Nom de l'entreprise (optionnel)</label>
+              <label className="form-label">Adresse de livraison</label>
               <input
                 type="text"
                 name="companyName"
                 value={form.companyName}
                 onChange={handleChange}
-                placeholder="Entrez le nom de votre entreprise"
+                placeholder="Entrez votre adresse"
                 className="form-input"
               />
+              {errors.companyName && (<div className="field-error">{errors.companyName}</div>)}
             </div>
           )}
 
@@ -257,6 +376,8 @@ export default function Register() {
           <button type="submit" disabled={submitting} className="btn-submit">
             {submitting ? "En cours..." : "S'inscrire"}
           </button>
+
+          {errors.server && <div className="field-error">{errors.server}</div>}
 
           <p className="aftertext">
             Déjà un compte ? <Link to="/login">Se connecter</Link>

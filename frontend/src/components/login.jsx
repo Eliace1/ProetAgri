@@ -12,7 +12,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_URL = import.meta?.env?.VITE_API_URL || "http://127.0.0.1:8000";
+  // Utilise le proxy Vite: appels relatifs "/api/..." => http://localhost:8000
+  const API_URL = "";
 
   const handleSubmit = async (e) => {
   e.preventDefault();
@@ -20,50 +21,45 @@ export default function Login() {
   setLoading(true);
 
   try {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
+    const res = await fetch(`/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ identifier, password }),
-      credentials: "include",
+      // Envoie aussi le rôle sélectionné; si le backend l'ignore, côté front on l'utilise pour router
+      body: JSON.stringify({ identifier, password, role }),
+      // credentials retiré pour éviter CORS strict tant que le backend n'est pas configuré
     });
 
     if (!res.ok) {
       // fallback dev
       const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-      saveAuth(fakeUser, "dev-token");
+      const userToSave = { ...fakeUser, role: role || "acheteur" };
+      saveAuth(userToSave, "dev-token");
     } else {
       const data = await res.json().catch(() => ({}));
       if (data?.user || data?.token) {
-        saveAuth(data.user || null, data.token || "");
+        const userToSave = { ...(data.user || {}), role: role || (data.user?.role || "acheteur") };
+        saveAuth(userToSave, data.token || "");
       } else {
         const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-        saveAuth(fakeUser, "dev-token");
+        const userToSave = { ...fakeUser, role: role || "acheteur" };
+        saveAuth(userToSave, "dev-token");
       }
     }
 
-    // 🚀 Redirection uniquement selon rôle choisi
-    if (role === "agriculteur") {
-      navigate("/profil-agriculteur");
-    } else if (role === "acheteur") {
-      navigate("/profil-acheteur");
-    } else {
+    // 🚀 Redirection: renvoie d'abord vers l'accueil; l'accès au dashboard se fait via la Navbar
+    if (!role) {
       setError("Veuillez sélectionner un rôle avant de continuer.");
     }
+    navigate("/", { replace: true });
 
   } catch (err) {
     // fallback total
     const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-    saveAuth(fakeUser, "dev-token");
-
-    if (role === "agriculteur") {
-      navigate("/profil-agriculteur");
-    } else if (role === "acheteur") {
-      navigate("/profil-acheteur");
-    } else {
-      navigate("/");
-    }
+    const userToSave = { ...fakeUser, role: role || "acheteur" };
+    saveAuth(userToSave, "dev-token");
+    navigate("/", { replace: true });
   } finally {
     setLoading(false);
   }

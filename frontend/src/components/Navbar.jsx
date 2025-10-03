@@ -44,6 +44,8 @@ export default function Navbar() {
         <span>FarmLink</span>
       </div>
 
+      {/* Lien acheteur retiré */}
+
       {/* bouton mobile unique */}
       <button
         className="mobile-toggle"
@@ -104,6 +106,17 @@ export default function Navbar() {
               </Link>
             </li>
           )}
+          {user && user.role === 'acheteur' && (
+            <li>
+              <Link
+                to="/client"
+                onClick={() => setOpen(false)}
+                style={isActive('/client') ? { fontWeight: 700, textDecoration: 'underline' } : undefined}
+              >
+                Acheteur
+              </Link>
+            </li>
+          )}
         </ul>
 
         {isMarketplace && (
@@ -118,11 +131,20 @@ export default function Navbar() {
       />
     </div>
     {user && (
-      <div
-        className="marketplace-avatar"
-        style={{ backgroundImage: `url(${user.avatar || "/images/avatar-placeholder.png"})` }}
-        title={user.name}
-      />
+      user.role === 'acheteur' ? (
+        <Link to="/client" onClick={() => setOpen(false)} title={user.name}>
+          <div
+            className="marketplace-avatar"
+            style={{ backgroundImage: `url(${user.avatar || "/images/avatar-placeholder.png"})` }}
+          />
+        </Link>
+      ) : (
+        <div
+          className="marketplace-avatar"
+          style={{ backgroundImage: `url(${user.avatar || "/images/avatar-placeholder.png"})` }}
+          title={user.name}
+        />
+      )
     )}
   </div>
 )}
