@@ -8,17 +8,34 @@ class Product extends Model
 {
     protected $fillable =[
         'name',
+        'price',
+        'qte',
+        'image',
         'description',
         'reduction',
-        'price'
+        'user_id',
+
     ];
 
     /**
      * Retourne l'agriculteur du produit
      */
-    public function agriculteur() {
+  
+     public function user()
+    {
         return $this->belongsTo(User::class);
     }
+
+     /**
+     *
+     * Retourne la liste des catégorie d'un produits
+     */
+    public function categorie()
+{
+    return $this->belongsTo(Categorie::class);
+}
+
+
 
 
     /**

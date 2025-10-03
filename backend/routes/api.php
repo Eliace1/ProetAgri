@@ -4,6 +4,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CategorieController;
+
 
 
 
@@ -25,9 +27,10 @@ Route::get('/test', function (Request $request) {
 
 
 // Accès public pour la liste et les détails des produits
+
 Route::get('products', [ProductController::class, 'index']); // GET /api/products -> index()
 Route::get('products/{product}', [ProductController::class, 'show']); // GET /api/products/1 -> show(1)
-
+Route::get('/categories', [CategorieController::class, 'index']);
 //  3. CRUD PRODUITS (ROUTES PROTÉGÉES)
 // Ces routes nécessitent d'être connecté (authentifié via le token Sanctum).
 Route::middleware('auth:sanctum')->group(function () {
