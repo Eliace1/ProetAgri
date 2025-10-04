@@ -1,48 +1,18 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 
 export default function FiltersSidebar({
-  // searchText,
-  // setSearchText,
-  selectedCategories,
+  selectedCategories = [],
   setSelectedCategories,
-  selectedAvailability,
-  setSelectedAvailability,
   priceRange,
   setPriceRange,
   maxPrice = 100,
-  availableCategories,
 }) {
-  const [allStocks, setAllStocks] = useState([]);
-
-  // 🔄 Récupère les stocks dynamiques depuis les produits
-  useEffect(() => {
-    const fetchStocks = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/products`);
-        const products = await response.json();
-        const stocks = [...new Set(products.map(p => p.stock).filter(Boolean))];
-        setAllStocks(stocks);
-      } catch (error) {
-        console.error("Erreur lors du chargement des stocks :", error);
-      }
-    };
-    fetchStocks();
-  }, []);
 
   const handleCategoryChange = (category) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== category));
     } else {
       setSelectedCategories([...selectedCategories, category]);
-    }
-  };
-
-  // ✅ gérer changement de disponibilité
-  const handleStockChange = (stock) => {
-    if (selectedAvailability.includes(stock)) {
-      setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
-    } else {
-      setSelectedAvailability([...selectedAvailability, stock]);
     }
   };
 
@@ -130,21 +100,6 @@ export default function FiltersSidebar({
             )
           )}
         </ul>
-      </div>
-
-      {/* Disponibilité */}
-      <div className="filter-block filter-stock">
-        <h4>Disponibilité</h4>
-        {["En stock", "Faible stock", "Rupture de stock"].map((stock) => (
-          <label key={stock}>
-            <input
-              type="checkbox"
-              checked={selectedAvailability.includes(stock)}
-              onChange={() => handleStockChange(stock)}
-            />{" "}
-            {stock}
-          </label>
-        ))}
       </div>
     </aside>
   );

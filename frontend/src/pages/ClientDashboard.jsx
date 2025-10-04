@@ -1,12 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getUser, saveAuth } from "../lib/auth";
 import { listMyOrders, cancelOrder } from "../api/orders";
 
 export default function ClientDashboard() {
   const [user, setUser] = useState(getUser());
   const [orders, setOrders] = useState([]);
-  const [form, setForm] = useState({ name: "", email: "", companyName: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", companyName: "", phone: "", avatar: "" });
   const [saving, setSaving] = useState(false);
+  const defaultAvatar =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#dbeafe"/>
+            <stop offset="100%" stop-color="#bfdbfe"/>
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="32" fill="url(#g)"/>
+        <circle cx="32" cy="24" r="10" fill="#ffffff"/>
+        <path d="M12 56c4-12 16-16 20-16s16 4 20 16" fill="#ffffff"/>
+      </svg>`
+    );
 
   useEffect(() => {
     const u = getUser();
@@ -16,6 +32,7 @@ export default function ClientDashboard() {
       email: u?.email || "",
       companyName: u?.companyName || "",
       phone: u?.phone || "",
+      avatar: u?.avatar || "",
     });
     setOrders(listMyOrders());
   }, []);
@@ -105,6 +122,16 @@ export default function ClientDashboard() {
     }
   };
 
+  const onAvatarChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((f) => ({ ...f, avatar: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const onCancelOrder = (id) => {
     const updated = cancelOrder(id);
     if (updated) setOrders(listMyOrders());
@@ -153,11 +180,22 @@ export default function ClientDashboard() {
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div className="avatar" style={{ width: 56, height: 56, borderRadius: 9999, backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${user?.avatar || "/images/avatar-placeholder.png"})` }} />
+          <img
+            src={form.avatar || user?.avatar || defaultAvatar}
+            alt="Avatar"
+            width={56}
+            height={56}
+            style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', display: 'block', background: '#e5e7eb' }}
+          />
           <div>
             <h1 style={{ margin: 0 }}>Tableau de bord Acheteur</h1>
             <p style={{ margin: 0, opacity: .7 }}>{user?.email}</p>
           </div>
+        </div>
+        <div>
+          <Link to="/profil" className="btn" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2563eb', color: '#2563eb', background: '#fff', textDecoration: 'none' }}>
+            Gérer mon profil
+          </Link>
         </div>
       </header>
 
@@ -303,31 +341,14 @@ export default function ClientDashboard() {
         )}
       </section>
 
-      {/* Profile form */}
+      {/* Lien vers la page profil */}
       <section style={{ marginTop: 24 }}>
         <div style={card()}>
-          <div style={cardTitle()}>Mes informations</div>
-          <form onSubmit={onSaveProfile} style={{ display: 'grid', gap: 12, maxWidth: 520 }}>
-            <label>
-              Nom
-              <input type="text" name="name" value={form.name} onChange={onChange} className="form-input" />
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" value={form.email} onChange={onChange} className="form-input" />
-            </label>
-            <label>
-              Adresse de livraison
-              <input type="text" name="companyName" value={form.companyName} onChange={onChange} className="form-input" />
-            </label>
-            <label>
-              Téléphone
-              <input type="tel" name="phone" value={form.phone} onChange={onChange} className="form-input" />
-            </label>
-            <button type="submit" className="btn" disabled={saving} style={{ width: 'fit-content' }}>
-              {saving ? 'Sauvegarde...' : 'Enregistrer'}
-            </button>
-          </form>
+          <div style={cardTitle()}>Profil</div>
+          <p style={{ color: '#6b7280', marginTop: 0 }}>Modifiez vos informations personnelles, photo de profil, mot de passe ou supprimez votre compte.</p>
+          <Link to="/profil" className="btn" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2563eb', color: '#2563eb', background: '#fff', textDecoration: 'none', width: 'fit-content', display: 'inline-block' }}>
+            Ouvrir les paramètres du profil
+          </Link>
         </div>
       </section>
     </div>

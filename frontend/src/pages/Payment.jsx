@@ -57,10 +57,10 @@ export default function Payment() {
         <div style={{ background:'#fff', padding:16, borderRadius:12, boxShadow:'0 1px 4px rgba(0,0,0,.06)' }}>
           <h3>Méthode de paiement</h3>
           <label style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <input type="radio" name="method" value="card" checked={method==='card'} onChange={(e)=>setMethod(e.target.value)} /> Carte bancaire (mock)
+            <input type="radio" name="method" value="card" checked={method==='card'} onChange={(e)=>setMethod(e.target.value)} /> Carte bancaire
           </label>
           <label style={{ display:'flex', gap:8, alignItems:'center', marginTop:8 }}>
-            <input type="radio" name="method" value="wallet" checked={method==='wallet'} onChange={(e)=>setMethod(e.target.value)} /> Portefeuille mobile (mock)
+            <input type="radio" name="method" value="wallet" checked={method==='wallet'} onChange={(e)=>setMethod(e.target.value)} /> Portefeuille mobile
           </label>
           <div style={{ display:'flex', gap:12, marginTop:16 }}>
             <button className="btn" onClick={()=>navigate('/checkout')} style={{ padding:'10px 16px', borderRadius:8 }}>Retour</button>

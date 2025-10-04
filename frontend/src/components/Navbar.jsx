@@ -113,7 +113,7 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 style={isActive('/client') ? { fontWeight: 700, textDecoration: 'underline' } : undefined}
               >
-                Acheteur
+                Mon compte
               </Link>
             </li>
           )}

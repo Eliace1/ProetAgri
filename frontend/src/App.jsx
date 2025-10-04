@@ -12,6 +12,7 @@ import Contact from "./pages/Contact";
 import Orders from "./pages/Orders";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ClientDashboard from "./pages/ClientDashboard";
+import ProfileSettings from "./pages/ProfileSettings";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 
@@ -116,6 +117,19 @@ export default function App() {
             <ProtectedRoute>
               <>
                 <ClientDashboard />
+                <Footer />
+              </>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Paramètres du profil (protégé) */}
+        <Route
+          path="/profil"
+          element={
+            <ProtectedRoute>
+              <>
+                <ProfileSettings />
                 <Footer />
               </>
             </ProtectedRoute>

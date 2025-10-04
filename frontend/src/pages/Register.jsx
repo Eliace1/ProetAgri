@@ -16,7 +16,7 @@ export default function Register() {
     farmName: "",
     farmAddress: "",
     companyName: "", // utilisé pour l'adresse acheteur (compat backend)
-    documents: [],
+    avatar: "",
   });
   
   const [submitting, setSubmitting] = useState(false);
@@ -31,17 +31,12 @@ export default function Register() {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleFiles = (files) => {
-    const fileList = Array.from(files || []);
-    setForm((f) => ({ ...f, documents: fileList }));
-  };
-
-  // Avatar supprimé
-
-  const onDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleFiles(e.dataTransfer.files);
+  const onAvatarChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setForm((f) => ({ ...f, avatar: reader.result }));
+    reader.readAsDataURL(file);
   };
 
   const validate = () => {
@@ -88,29 +83,12 @@ export default function Register() {
         phone: form.phone,
         password: form.password,
         password_confirmation: form.confirmPassword,
+        avatar: form.avatar, // data URL (base64)
         ...(role === "agriculteur" ? { farmName: form.farmName, farmAddress: form.farmAddress } : {}),
         ...(role === "acheteur" ? { companyName: form.companyName, address: form.companyName } : {}),
       };
 
-      const data = new FormData();
-      Object.entries({
-        role,
-        name: `${form.firstName?.trim() || ""} ${form.lastName?.trim() || ""}`.trim(),
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        phone: form.phone,
-        password: form.password,
-        password_confirmation: form.confirmPassword,
-        farmName: form.farmName,
-        farmAddress: form.farmAddress,
-        companyName: form.companyName,
-        address: form.companyName,
-      }).forEach(([k, v]) => v != null && v !== "" && data.append(k, v));
-      form.documents.forEach((f) => data.append("documents[]", f));
-
-      const hasFiles = (form.documents && form.documents.length > 0);
-      const resp = await registerUser(hasFiles ? data : payload, hasFiles);
+      const resp = await registerUser(payload, false);
       const { user, token } = resp || {};
 
       // Enrichit l'utilisateur sauvegardé si le backend n'envoie pas ces champs
@@ -120,11 +98,13 @@ export default function Register() {
         last_name: form.lastName,
         email: form.email,
         role,
+        avatar: form.avatar,
         ...(role === "agriculteur" ? { farmName: form.farmName, farm_address: form.farmAddress } : {}),
         ...(role === "acheteur" ? { companyName: form.companyName } : {}),
       };
       const userToSave = user ? {
         ...user,
+        ...(form.avatar && !user.avatar ? { avatar: form.avatar } : {}),
         ...(role === "agriculteur" && !user.farmName && !user.farm_name ? { farmName: form.farmName } : {}),
         ...(role === "agriculteur" && !user.farm_address ? { farm_address: form.farmAddress } : {}),
         ...(role === "acheteur" && !user.companyName && !user.company_name ? { companyName: form.companyName } : {}),
@@ -340,38 +320,17 @@ export default function Register() {
             </div>
           )}
 
-          {role === "agriculteur" && (
-            <div className="form-field">
-              <label className="form-label">Documents de Vérification d'identité</label>
-              <div
-                className="dropzone"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onDrop={onDrop}
-              >
-                <input
-                  id="docs"
-                  type="file"
-                  multiple
-                  onChange={(e) => handleFiles(e.target.files)}
-                  className="hidden-input"
-                />
-                <label htmlFor="docs" className="dropzone-label">
-                  Glissez-déposez vos documents ici ou cliquez pour sélectionner
-                  <span className="hint">(Permis de conduire, carte d'identité, etc.)</span>
-                </label>
-                {form.documents?.length > 0 && (
-                  <div className="files-preview">
-                    {form.documents.map((f, idx) => (
-                      <div key={idx}>{f.name}</div>
-                    ))}
-                  </div>
-                )}
-              </div>
+          {/* Avatar */}
+          <div className="form-field">
+            <label className="form-label">Photo de profil</label>
+            <div className="avatar-row">
+              <div className="avatar-preview" style={{ backgroundImage: `url(${form.avatar || ''})` }} />
+              <input type="file" accept="image/*" onChange={onAvatarChange} />
+              {form.avatar && (
+                <button type="button" className="btn-toggle" onClick={() => setForm((f)=>({ ...f, avatar: '' }))}>Retirer</button>
+              )}
             </div>
-          )}
+          </div>
 
           <button type="submit" disabled={submitting} className="btn-submit">
             {submitting ? "En cours..." : "S'inscrire"}
