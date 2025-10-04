@@ -13,7 +13,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_URL = import.meta?.env?.VITE_API_URL || "http://127.0.0.1:8000";
+  // Utilise le proxy Vite: appels relatifs "/api/..." => http://localhost:8000
+  const API_URL = "";
 
   const handleSubmit = async (e) => {
     e.preventDefault();

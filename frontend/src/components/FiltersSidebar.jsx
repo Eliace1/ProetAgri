@@ -1,33 +1,12 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 
 export default function FiltersSidebar({
-  // searchText,
-  // setSearchText,
-  selectedCategories,
+  selectedCategories = [],
   setSelectedCategories,
-  // selectedAvailability,
-  // setSelectedAvailability,
   priceRange,
   setPriceRange,
   maxPrice = 100,
-  availableCategories,
 }) {
-  const [allStocks, setAllStocks] = useState([]);
-
-  // 🔄 Récupère les stocks dynamiques depuis les produits
-  useEffect(() => {
-    const fetchStocks = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/products`);
-        const products = await response.json();
-        const stocks = [...new Set(products.map(p => p.stock).filter(Boolean))];
-        setAllStocks(stocks);
-      } catch (error) {
-        console.error("Erreur lors du chargement des stocks :", error);
-      }
-    };
-    fetchStocks();
-  }, []);
 
   const handleCategoryChange = (category) => {
     if (selectedCategories.includes(category)) {
@@ -36,14 +15,6 @@ export default function FiltersSidebar({
       setSelectedCategories([...selectedCategories, category]);
     }
   };
-
-  // const handleStockChange = (stock) => {
-  //   if (selectedAvailability.includes(stock)) {
-  //     setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
-  //   } else {
-  //     setSelectedAvailability([...selectedAvailability, stock]);
-  //   }
-  // };
 
   return (
     <aside className="filters-sidebar">
@@ -114,35 +85,22 @@ export default function FiltersSidebar({
       <div className="filter-block filter-categories">
         <h4>Catégorie</h4>
         <ul>
-          {availableCategories.map((cat) => (
-            <li key={cat}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedCategories.includes(cat)}
-                  onChange={() => handleCategoryChange(cat)}
-                />{" "}
-                {cat}
-              </label>
-            </li>
-          ))}
+          {["Fruits", "Légumes", "Céréales", "Produits laitiers", "Viande"].map(
+            (cat) => (
+              <li key={cat}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(cat)}
+                    onChange={() => handleCategoryChange(cat)}
+                  />{" "}
+                  {cat}
+                </label>
+              </li>
+            )
+          )}
         </ul>
       </div>
-
-      {/* Disponibilité dynamique */}
-      {/* <div className="filter-block filter-stock">
-        <h4>Disponibilité</h4>
-        {allStocks.map((stock) => (
-          <label key={stock}>
-            <input
-              type="checkbox"
-              checked={selectedAvailability.includes(stock)}
-              onChange={() => handleStockChange(stock)}
-            />{" "}
-            {stock}
-          </label>
-        ))}
-      </div> */}
     </aside>
   );
 }
