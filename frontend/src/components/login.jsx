@@ -9,10 +9,11 @@ export default function Login() {
   const location = useLocation();
   const [email, setEmail] = useState(""); // email ou téléphone
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState(""); // rôle choisi (agriculteur ou acheteur)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_URL = import.meta?.env?.VITE_API_URL || "http://127.0.0.1:8000"; // adapte si besoin
+  const API_URL = import.meta?.env?.VITE_API_URL || "http://127.0.0.1:8000";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,6 +76,32 @@ export default function Login() {
               required
             />
 
+            {/* Boutons radio */}
+            <div className="role-selection">
+              <label>
+                <input
+                  type="radio"
+                  name="role"
+                  value="agriculteur"
+                  checked={role === "agriculteur"}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                />{" "}
+                Agriculteur
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="role"
+                  value="acheteur"
+                  checked={role === "acheteur"}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                />{" "}
+                Acheteur
+              </label>
+            </div>
+
             <a href="#" className="forgot">Mot de passe oublié ?</a>
 
             {error && (
@@ -94,7 +121,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Footer ajouté ici */}
       <Footer />
     </>
   );

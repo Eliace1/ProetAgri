@@ -1,17 +1,34 @@
-// No search here; search lives in Navbar on /marche
+import { useEffect, useState } from 'react';
 
 export default function FiltersSidebar({
-  searchText,
-  setSearchText,
+  // searchText,
+  // setSearchText,
   selectedCategories,
   setSelectedCategories,
-  selectedAvailability,
-  setSelectedAvailability,
+  // selectedAvailability,
+  // setSelectedAvailability,
   priceRange,
   setPriceRange,
   maxPrice = 100,
+  availableCategories,
 }) {
-  // ✅ gérer changement de catégories
+  const [allStocks, setAllStocks] = useState([]);
+
+  // 🔄 Récupère les stocks dynamiques depuis les produits
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/products`);
+        const products = await response.json();
+        const stocks = [...new Set(products.map(p => p.stock).filter(Boolean))];
+        setAllStocks(stocks);
+      } catch (error) {
+        console.error("Erreur lors du chargement des stocks :", error);
+      }
+    };
+    fetchStocks();
+  }, []);
+
   const handleCategoryChange = (category) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== category));
@@ -20,33 +37,29 @@ export default function FiltersSidebar({
     }
   };
 
-  // ✅ gérer changement de disponibilité
-  const handleStockChange = (stock) => {
-    if (selectedAvailability.includes(stock)) {
-      setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
-    } else {
-      setSelectedAvailability([...selectedAvailability, stock]);
-    }
-  };
+  // const handleStockChange = (stock) => {
+  //   if (selectedAvailability.includes(stock)) {
+  //     setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
+  //   } else {
+  //     setSelectedAvailability([...selectedAvailability, stock]);
+  //   }
+  // };
 
   return (
     <aside className="filters-sidebar">
-      {/* Styles minimaux pour la double poignée affichée sur UNE SEULE barre */}
       <style>{`
         .dual-range { position: relative; height: 36px; }
         .dual-range .track { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); height: 6px; border-radius: 9999px; background: #e5e7eb; }
         .dual-range input[type="range"] { position: absolute; left: 0; right: 0; top: 0; bottom: 0; width: 100%; height: 36px; margin: 0; background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none; }
-        /* Masquer la piste native */
         .dual-range input[type="range"]::-webkit-slider-runnable-track { background: transparent; height: 6px; }
         .dual-range input[type="range"]::-moz-range-track { background: transparent; height: 6px; }
-        /* Style du pouce */
         .dual-range input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 16px; width: 16px; border-radius: 9999px; background: #2563eb; border: 0; cursor: pointer; pointer-events: all; position: relative; }
         .dual-range input[type="range"]::-moz-range-thumb { height: 16px; width: 16px; border-radius: 9999px; background: #2563eb; border: 0; cursor: pointer; pointer-events: all; position: relative; }
       `}</style>
+
       {/* Prix */}
       <div className="filter-block filter-price">
         <h4>Prix</h4>
-        {/* Barre unique avec deux poignées (min et max) */}
         {(() => {
           const min = Math.max(0, Math.min(priceRange.min, maxPrice));
           const max = Math.max(0, Math.min(priceRange.max, maxPrice));
@@ -60,7 +73,6 @@ export default function FiltersSidebar({
                   background: `linear-gradient(to right, #e5e7eb ${minPercent}%, #2563eb ${minPercent}%, #2563eb ${maxPercent}%, #e5e7eb ${maxPercent}%)`,
                 }}
               />
-              {/* Poignée Min */}
               <input
                 type="range"
                 min={0}
@@ -71,12 +83,10 @@ export default function FiltersSidebar({
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   const clamped = Math.max(0, Math.min(v, maxPrice));
-                  // Empêche min de dépasser max
                   setPriceRange({ ...priceRange, min: Math.min(clamped, priceRange.max) });
                 }}
                 style={{ zIndex: min < max ? 3 : 4 }}
               />
-              {/* Poignée Max */}
               <input
                 type="range"
                 min={0}
@@ -87,7 +97,6 @@ export default function FiltersSidebar({
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   const clamped = Math.max(0, Math.min(v, maxPrice));
-                  // Empêche max de passer sous min
                   setPriceRange({ ...priceRange, max: Math.max(clamped, priceRange.min) });
                 }}
                 style={{ zIndex: 4 }}
@@ -101,31 +110,29 @@ export default function FiltersSidebar({
         </div>
       </div>
 
-      {/* Catégories */}
+      {/* Catégories dynamiques */}
       <div className="filter-block filter-categories">
         <h4>Catégorie</h4>
         <ul>
-          {["Fruits", "Légumes", "Céréales", "Produits laitiers", "Viande"].map(
-            (cat) => (
-              <li key={cat}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(cat)}
-                    onChange={() => handleCategoryChange(cat)}
-                  />{" "}
-                  {cat}
-                </label>
-              </li>
-            )
-          )}
+          {availableCategories.map((cat) => (
+            <li key={cat}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(cat)}
+                  onChange={() => handleCategoryChange(cat)}
+                />{" "}
+                {cat}
+              </label>
+            </li>
+          ))}
         </ul>
       </div>
 
-      {/* Disponibilité */}
-      <div className="filter-block filter-stock">
+      {/* Disponibilité dynamique */}
+      {/* <div className="filter-block filter-stock">
         <h4>Disponibilité</h4>
-        {["En stock", "Faible stock", "Rupture de stock"].map((stock) => (
+        {allStocks.map((stock) => (
           <label key={stock}>
             <input
               type="checkbox"
@@ -135,7 +142,7 @@ export default function FiltersSidebar({
             {stock}
           </label>
         ))}
-      </div>
+      </div> */}
     </aside>
   );
 }

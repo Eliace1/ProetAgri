@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { FaLeaf, FaBars, FaTimes } from "react-icons/fa";
+import { FaLeaf, FaBars, FaTimes, FaSearch } from "react-icons/fa";
 import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { getUser, logout as doLogout } from "../lib/auth";
+
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -60,7 +61,7 @@ export default function Navbar() {
             <Link
               to="/"
               onClick={() => setOpen(false)}
-              style={isActive('/') ? { fontWeight: 700, textDecoration: 'underline' } : undefined}
+              style={isActive('/') ? { fontWeight: 700, textDecoration: 'none' } : undefined}
             >
               Accueil
             </Link>
@@ -69,7 +70,7 @@ export default function Navbar() {
             <Link
               to="/marche"
               onClick={() => setOpen(false)}
-              style={isActive('/marche') ? { fontWeight: 700, textDecoration: 'underline' } : undefined}
+              style={isActive('/marche') ? { fontWeight: 700, textDecoration: 'none' } : undefined}
             >
               Marché
             </Link>
@@ -78,7 +79,7 @@ export default function Navbar() {
             <Link
               to="/apropos"
               onClick={() => setOpen(false)}
-              style={isActive('/apropos') ? { fontWeight: 700, textDecoration: 'underline' } : undefined}
+              style={isActive('/apropos') ? { fontWeight: 700, textDecoration: 'none' } : undefined}
             >
               À Propos
             </Link>
@@ -87,7 +88,7 @@ export default function Navbar() {
             <Link
               to="/contact"
               onClick={() => setOpen(false)}
-              style={isActive('/contact') ? { fontWeight: 700, textDecoration: 'underline' } : undefined}
+              style={isActive('/contact') ? { fontWeight: 700, textDecoration: 'none' } : undefined}
             >
               Contact
             </Link>
@@ -106,27 +107,28 @@ export default function Navbar() {
         </ul>
 
         {isMarketplace && (
-          <div className="marketplace-header" style={{ margin: 0 }}>
-            <div className="marketplace-search">
-              <span className="icon">🔎</span>
-              <input
-                type="text"
-                placeholder="Rechercher des produits..."
-                value={query}
-                onChange={(e) => updateQuery(e.target.value)}
-              />
-            </div>
-            {user && (
-              <div
-                className="marketplace-avatar"
-                style={{ backgroundImage: `url(${user.avatar || "/images/avatar-placeholder.png"})` }}
-                title={user.name}
-              />
-            )}
-          </div>
-        )}
+  <div className="marketplace-header" style={{ margin: 0 }}>
+    <div className="marketplace-search">
+      <FaSearch className="icon" />
+      <input
+        type="text"
+        placeholder="Rechercher des produits..."
+        value={query}
+        onChange={(e) => updateQuery(e.target.value)}
+      />
+    </div>
+    {user && (
+      <div
+        className="marketplace-avatar"
+        style={{ backgroundImage: `url(${user.avatar || "/images/avatar-placeholder.png"})` }}
+        title={user.name}
+      />
+    )}
+  </div>
+)}
 
-        {/* 👉 Boutons d'auth affichés uniquement si non connecté et pas sur /marche */}
+
+        {/*  Boutons d'auth affichés uniquement si non connecté et pas sur /marche */}
         {!isMarketplace && !user && (
           <div className="nav-buttons">
             <Link to="/inscription" className="btn white" onClick={() => setOpen(false)}>
