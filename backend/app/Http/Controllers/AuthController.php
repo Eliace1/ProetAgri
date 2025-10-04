@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\RegisterRequest;
+use App\Mail\WelcomeMails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,9 +19,13 @@ class AuthController extends Controller
         if($request->hasFile('profile')){
             $path=$request->file('profile')->store('img','public');
             $data['profile']=$path;
+        }else {
+            $data['profile'] = 'profiles/default.png'; // image par défaut
         }
 
         $user = User::create($data);
+        Mail::to($user->email)->send(new WelcomeMails($user));
+
         return response()->json([
             'message'=>'utilisateur créé avec succés',
             'user' => $user

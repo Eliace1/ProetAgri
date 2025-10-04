@@ -31,7 +31,8 @@ export default function Login() {
             setError("Mot de passe ou email incorrect");
           }else{
             localStorage.setItem('user_token',res.data.token)
-            navigate('Homepage')
+           const from = location.state?.from?.pathname || "/";
+            navigate(from, { replace: true });
           }
         })
         .catch((err)=>{
@@ -75,33 +76,6 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-
-            {/* Boutons radio */}
-            <div className="role-selection">
-              <label>
-                <input
-                  type="radio"
-                  name="role"
-                  value="agriculteur"
-                  checked={role === "agriculteur"}
-                  onChange={(e) => setRole(e.target.value)}
-                  required
-                />{" "}
-                Agriculteur
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="role"
-                  value="acheteur"
-                  checked={role === "acheteur"}
-                  onChange={(e) => setRole(e.target.value)}
-                  required
-                />{" "}
-                Acheteur
-              </label>
-            </div>
-
             <a href="#" className="forgot">Mot de passe oublié ?</a>
 
             {error && (
