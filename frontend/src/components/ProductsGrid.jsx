@@ -16,6 +16,7 @@ export default function ProductsGrid({ products: overrideProducts }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Charge les produits depuis Laravel
   useEffect(() => {
     const load = async () => {
       try {
@@ -40,24 +41,11 @@ export default function ProductsGrid({ products: overrideProducts }) {
       return;
     }
     addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
-    // feedback simple
     try { window?.dispatchEvent(new CustomEvent('cart:add', { detail: { id: product.id } })); } catch {}
+    alert('Produit ajouté au panier');
   }, [navigate, location]);
 
   if (loading) return <p>Chargement des produits...</p>;
-
-  const getFarmName = (p) => {
-    return (
-      p?.farmName ||
-      p?.farm_name ||
-      p?.farm ||
-      p?.producerName ||
-      p?.producer ||
-      p?.agriculteurNom ||
-      p?.agriculteur?.nom ||
-      ""
-    );
-  };
 
   return (
     <section className="products-grid">
@@ -66,9 +54,9 @@ export default function ProductsGrid({ products: overrideProducts }) {
           <img src={product.image} alt={product.name} />
           <h4>{product.name}</h4>
           <p className="price">{formatPrice(product.price)}</p>
-          {getFarmName(product) && (
-            <span className="farm-name">{getFarmName(product)}</span>
-          )}
+          <span className={`stock ${String(product.stock).replace(/\s+/g, "-").toLowerCase()}`}>
+            {product.stock}
+          </span>
           <button onClick={() => onAdd(product)}>Ajouter au panier</button>
         </div>
       ))}
