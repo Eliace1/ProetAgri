@@ -1,28 +1,29 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-//import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { saveAuth } from "../lib/auth";
 import { registerUser } from "../api/auth";
 
 export default function Register() {
   const [role, setRole] = useState("agriculteur"); // "agriculteur" | "acheteur"
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    name: "",
     email: "",
     phone: "",
     password: "",
-    confirmPassword: "",
-    farmName: "",
-    farmAddress: "",
-    companyName: "", // utilisé pour l'adresse acheteur (compat backend)
-    avatar: "",
+    password_confirmation: "",
+    address: "",
+    address:"",
+    company_name: "", // utilisé pour l'adresse acheteur (compat backend)
+    profile: "",
   });
   
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,33 +33,32 @@ export default function Register() {
   };
 
   const onAvatarChange = (e) => {
-    const file = e.target.files && e.target.files[0];
+    const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, avatar: reader.result }));
-    reader.readAsDataURL(file);
+    setForm((f) => ({ ...f, profile: file }));
   };
+
 
   const validate = () => {
     const e = {};
     const emailRe = /.+@.+\..+/;
     // Champs de base
-    if (!form.firstName?.trim()) e.firstName = "Le prénom est obligatoire.";
-    if (!form.lastName?.trim()) e.lastName = "Le nom est obligatoire.";
+    if (!form.first_name?.trim()) e.first_name = "Le prénom est obligatoire.";
+    if (!form.name?.trim()) e.name = "Le nom est obligatoire.";
     if (!form.email?.trim()) e.email = "L'email est obligatoire.";
     else if (!emailRe.test(form.email)) e.email = "Format d'email invalide.";
     if (!form.phone?.trim()) e.phone = "Le téléphone est obligatoire.";
     // Mot de passe
     if (!form.password) e.password = "Le mot de passe est obligatoire.";
     else if (form.password.length < 6) e.password = "Minimum 6 caractères.";
-    if (!form.confirmPassword) e.confirmPassword = "Veuillez confirmer le mot de passe.";
-    else if (form.password !== form.confirmPassword) e.confirmPassword = "Les mots de passe ne correspondent pas.";
+    if (!form.password_confirmation) e.password_confirmation = "Veuillez confirmer le mot de passe.";
+    else if (form.password !== form.password_confirmation) e.password_confirmation = "Les mots de passe ne correspondent pas.";
     // Champs selon rôle
-    if (role === "acheteur" && (!form.companyName || !form.companyName.trim())) {
-      e.companyName = "L'adresse de livraison est obligatoire.";
+    if (role === "acheteur" && (!form.company_name || !form.company_name.trim())) {
+      e.company_name = "L'adresse de livraison est obligatoire.";
     }
-    if (role === "agriculteur" && (!form.farmAddress || !form.farmAddress.trim())) {
-      e.farmAddress = "L'adresse de la ferme est obligatoire.";
+    if (role === "agriculteur" && (!form.address || !form.address.trim())) {
+      e.address = "L'adresse de la ferme est obligatoire.";
     }
     return e;
   };
@@ -66,96 +66,51 @@ export default function Register() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const v = validate();
-    if (Object.keys(v).length) {
-      setErrors(v);
-      setSubmitting(false);
-      return;
-    }
 
     try {
-      const payload = {
-        role,
-        name: `${form.firstName?.trim() || ""} ${form.lastName?.trim() || ""}`.trim(),
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        phone: form.phone,
-        password: form.password,
-        password_confirmation: form.confirmPassword,
-        avatar: form.avatar, // data URL (base64)
-        ...(role === "agriculteur" ? { farmName: form.farmName, farmAddress: form.farmAddress } : {}),
-        ...(role === "acheteur" ? { companyName: form.companyName, address: form.companyName } : {}),
-      };
+      const formData = new FormData();
+      formData.append('first_name', form.first_name);
+      formData.append('name', form.name);
+      formData.append('email', form.email);
+      formData.append('phone', form.phone);
+      formData.append('password', form.password);
+      formData.append('password_confirmation', form.password_confirmation);
+      formData.append('address', form.address);
+      formData.append('company_name', form.company_name);
+      formData.append('farmer', role === "agriculteur" ? 1 : 0);
+      formData.append('customer', role === "acheteur" ? 1 : 0);
 
-      const resp = await registerUser(payload, false);
-      const { user, token } = resp || {};
 
-      // Enrichit l'utilisateur sauvegardé si le backend n'envoie pas ces champs
-      const fallbackUser = {
-        name: `${form.firstName?.trim() || ""} ${form.lastName?.trim() || ""}`.trim(),
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        role,
-        avatar: form.avatar,
-        ...(role === "agriculteur" ? { farmName: form.farmName, farm_address: form.farmAddress } : {}),
-        ...(role === "acheteur" ? { companyName: form.companyName } : {}),
-      };
-      const userToSave = user ? {
-        ...user,
-        ...(form.avatar && !user.avatar ? { avatar: form.avatar } : {}),
-        ...(role === "agriculteur" && !user.farmName && !user.farm_name ? { farmName: form.farmName } : {}),
-        ...(role === "agriculteur" && !user.farm_address ? { farm_address: form.farmAddress } : {}),
-        ...(role === "acheteur" && !user.companyName && !user.company_name ? { companyName: form.companyName } : {}),
-      } : fallbackUser;
-      saveAuth(userToSave, token || "");
-      // Optionnel: toast/redirect; on garde le flow actuel
-    } catch (err) {
-      const status = err?.response?.status;
-      const data = err?.response?.data;
-      console.error("Register error:", { status, data, err });
-      let message = "Une erreur est survenue. Réessayez.";
-      if (data) {
-        if (typeof data === 'object') {
-          if (data.errors && typeof data.errors === 'object') {
-            // Mappe les erreurs backend sur les champs
-            const mapped = {};
-            Object.entries(data.errors).forEach(([k, v]) => {
-              const msg = Array.isArray(v) ? v.join(' ') : String(v);
-              if (k === 'password' || k === 'password_confirmation') {
-                mapped.confirmPassword = msg;
-              } else if (k === 'email') {
-                mapped.email = msg;
-              } else if (k === 'name' || k === 'first_name' || k === 'last_name') {
-                // si l'API renvoie une erreur de nom, l'afficher côté lastName par défaut
-                mapped.lastName = msg;
-              } else if (k === 'phone') {
-                mapped.phone = msg;
-              } else if (k === 'farmAddress' || k === 'farm_address') {
-                mapped.farmAddress = msg;
-              } else if (k === 'companyName' || k === 'company_name' || k === 'address') {
-                mapped.companyName = msg;
-              } else {
-                mapped.server = (mapped.server ? mapped.server + '\n' : '') + msg;
-              }
-            });
-            setErrors(mapped);
-            message = data.message || message;
-          } else {
-            message = data.message || message;
-          }
-        } else if (typeof data === 'string') {
-          message = `Erreur ${status || ''}`.trim() + `\n` + data.slice(0, 300);
-        }
-      } else if (err?.message) {
-        message = err.message;
+      // Ajouter le fichier si il existe
+      if (form.profile instanceof File) {
+        formData.append('profile', form.profile);
       }
-      if (!data?.errors) alert(message);
+
+      const res = await axios.post('http://127.0.0.1:8000/api/register', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data.status === 201) {
+        navigate('/login');
+      }
+
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.errors) {
+        const mapped = {};
+        Object.entries(data.errors).forEach(([k, v]) => {
+          mapped[k] = Array.isArray(v) ? v.join(' ') : v;
+        });
+        setErrors(mapped);
+      } else {
+        setErrors({ server: data?.message || "Erreur serveur" });
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
+
 
   return (
     <div className="register-page">
@@ -171,25 +126,25 @@ export default function Register() {
               <label className="form-label">Prénom</label>
               <input
                 type="text"
-                name="firstName"
-                value={form.firstName}
+                name="first_name"
+                value={form.first_name}
                 onChange={handleChange}
                 placeholder="Entrez votre prénom"
                 className="form-input"
               />
-              {errors.firstName && (<div className="field-error">{errors.firstName}</div>)}
+              {errors.first_name && (<div className="field-error">{errors.first_name}</div>)}
             </div>
             <div className="form-field">
               <label className="form-label">Nom</label>
               <input
                 type="text"
-                name="lastName"
-                value={form.lastName}
+                name="name"
+                value={form.name}
                 onChange={handleChange}
                 placeholder="Entrez votre nom"
                 className="form-input"
               />
-              {errors.lastName && (<div className="field-error">{errors.lastName}</div>)}
+              {errors.name && (<div className="field-error">{errors.name}</div>)}
             </div>
           </div>
 
@@ -243,8 +198,8 @@ export default function Register() {
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type={showConfirm ? "text" : "password"}
-                name="confirmPassword"
-                value={form.confirmPassword}
+                name="password_confirmation"
+                value={form.password_confirmation}
                 onChange={handleChange}
                 placeholder="Ressaisissez votre mot de passe"
                 className="form-input"
@@ -253,7 +208,7 @@ export default function Register() {
                 {showConfirm ? 'Masquer' : 'Afficher'}
               </button>
             </div>
-            {errors.confirmPassword && (<div className="field-error">{errors.confirmPassword}</div>)}
+            {errors.password_confirmation && (<div className="field-error">{errors.password_confirmation}</div>)}
           </div>
 
           <div className="form-field">
@@ -281,8 +236,8 @@ export default function Register() {
               <label className="form-label">Nom de la Ferme</label>
               <input
                 type="text"
-                name="farmName"
-                value={form.farmName}
+                name="company_name"
+                value={form.company_name}
                 onChange={handleChange}
                 placeholder="Entrez le nom de votre ferme"
                 className="form-input"
@@ -295,13 +250,13 @@ export default function Register() {
               <label className="form-label">Adresse de la Ferme</label>
               <input
                 type="text"
-                name="farmAddress"
-                value={form.farmAddress}
+                name="address"
+                value={form.address}
                 onChange={handleChange}
                 placeholder="Entrez l'adresse de votre ferme"
                 className="form-input"
               />
-              {errors.farmAddress && (<div className="field-error">{errors.farmAddress}</div>)}
+              {errors.address && (<div className="field-error">{errors.address}</div>)}
             </div>
           )}
 
@@ -310,24 +265,24 @@ export default function Register() {
               <label className="form-label">Adresse de livraison</label>
               <input
                 type="text"
-                name="companyName"
-                value={form.companyName}
+                name="address"
+                value={form.address}
                 onChange={handleChange}
                 placeholder="Entrez votre adresse"
                 className="form-input"
               />
-              {errors.companyName && (<div className="field-error">{errors.companyName}</div>)}
+              {errors.addresse && (<div className="field-error">{errors.address}</div>)}
             </div>
           )}
 
           {/* Avatar */}
           <div className="form-field">
             <label className="form-label">Photo de profil</label>
-            <div className="avatar-row">
-              <div className="avatar-preview" style={{ backgroundImage: `url(${form.avatar || ''})` }} />
+            <div className="profile-row">
+              <div className="profile-preview" style={{ backgroundImage: `url(${form.profile || ''})` }} />
               <input type="file" accept="image/*" onChange={onAvatarChange} />
-              {form.avatar && (
-                <button type="button" className="btn-toggle" onClick={() => setForm((f)=>({ ...f, avatar: '' }))}>Retirer</button>
+              {form.profile && (
+                <button type="button" className="btn-toggle" onClick={() => setForm((f)=>({ ...f, profile: '' }))}>Retirer</button>
               )}
             </div>
           </div>
