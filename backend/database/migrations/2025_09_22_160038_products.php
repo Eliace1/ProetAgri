@@ -20,7 +20,7 @@ return new class extends Migration
             $table->longText('description');
             $table->double('reduction');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('categorie_id')->constrained('catégories')->onDelete('cascade');
+            $table->foreignId('categorie_id')->constrained('categories')->onDelete('cascade');
         });
     }
 
