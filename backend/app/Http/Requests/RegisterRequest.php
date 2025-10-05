@@ -24,7 +24,7 @@ class RegisterRequest extends FormRequest
         return [
             'name'=> ['required','min:4'],
             'email'=> ['required','min:4','unique:users,email','email'],
-            'password'=> ['required','confirmed','min:8'],
+            'password'=> ['required','confirmed','min:8','regex:/[A-Z]/','regex:/[0-9]/','regex:/[@$!%*?&]/'],
             'address'=> ['required','min:4'],
             'phone'=> ['required','regex:/^0[1-9][0-9]{8}$/'],
             'first_name' =>['required','min:4'],
@@ -37,7 +37,10 @@ class RegisterRequest extends FormRequest
     {
         return[
             'email.unique'=>'Cet email existe déjà',
-            'password.confirmed'=>'Les mots de passes ne correspondent pas'
+            'password.confirmed'=>'Les mots de passes ne correspondent pas',
+            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial.',
+            'phone'=> 'Le numero de telephone est invalide'
         ];
     }
 }

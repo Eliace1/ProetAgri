@@ -33,7 +33,8 @@ class User extends Authenticatable
         'customer',
         'admin',
         'profile',
-        'company_name'
+        'company_name',
+        'farm_address'
     ];
 
     /**

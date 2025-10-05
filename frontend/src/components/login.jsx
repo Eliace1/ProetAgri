@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import { saveAuth } from "../lib/auth";
 import axios from "axios";
 
+
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,9 +32,9 @@ export default function Login() {
           if(res.data.status !==200){
             setError("Mot de passe ou email incorrect");
           }else{
+            saveAuth(res.data.token,res.data.user)
             localStorage.setItem('user_token',res.data.token)
-           const from = location.state?.from?.pathname || "/";
-            navigate(from, { replace: true });
+            navigate('/client')
           }
         })
         .catch((err)=>{

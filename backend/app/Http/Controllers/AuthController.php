@@ -28,7 +28,8 @@ class AuthController extends Controller
 
         return response()->json([
             'message'=>'utilisateur créé avec succés',
-            'user' => $user
+            'user' => $user,
+            'status'=>201
         ],201);
     }
 
