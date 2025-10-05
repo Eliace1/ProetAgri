@@ -37,14 +37,7 @@ export default function FiltersSidebar({
     }
   };
 
-  // gérer changement de disponibilité
-  const handleStockChange = (stock) => {
-    if (selectedAvailability.includes(stock)) {
-      setSelectedAvailability(selectedAvailability.filter((s) => s !== stock));
-    } else {
-      setSelectedAvailability([...selectedAvailability, stock]);
-    }
-  };
+
 
   return (
     <aside className="filters-sidebar">
@@ -132,20 +125,7 @@ export default function FiltersSidebar({
         </ul>
       </div>
 
-      {/* Disponibilité */}
-      <div className="filter-block filter-stock">
-        <h4>Disponibilité</h4>
-        {["En stock", "Faible stock", "Rupture de stock"].map((stock) => (
-          <label key={stock}>
-            <input
-              type="checkbox"
-              checked={selectedAvailability.includes(stock)}
-              onChange={() => handleStockChange(stock)}
-            />{" "}
-            {stock}
-          </label>
-        ))}
-      </div>
+     
     </aside>
   );
 }
