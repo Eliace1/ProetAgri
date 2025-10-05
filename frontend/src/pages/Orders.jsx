@@ -46,7 +46,7 @@ export default function Orders() {
         {items.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#6b7280' }}>
             <p style={{ margin: '16px 0' }}>Votre panier est vide.</p>
-            <Link to="/marche" className="btn" style={{ background: '#2563eb', color: '#fff', padding: '10px 16px', borderRadius: 8 }}>
+            <Link to="/marche" className="btn" style={{ background: '#2563eb', color: '#fff', padding: '10px 16px', borderRadius: 8, textDecoration: 'none' }}>
               Découvrir des produits
             </Link>
           </div>
@@ -81,8 +81,11 @@ export default function Orders() {
               <span>{total.toFixed(2)} €</span>
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-              <Link to="/marche" className="btn" style={{ background: '#2563eb', color: '#fff', padding: '10px 16px', borderRadius: 8 }}>
+              <Link to="/marche" className="btn" style={{ background: '#2563eb', color: '#fff', padding: '10px 16px', borderRadius: 8, textDecoration: 'none' }}>
                 Continuer mes achats
+              </Link>
+              <Link to="/checkout" className="btn" style={{ background: '#16a34a', color: '#fff', padding: '10px 16px', borderRadius: 8, textDecoration: 'none' }}>
+                Passer la commande
               </Link>
               <button
                 onClick={() => updateAndPersist([])}
