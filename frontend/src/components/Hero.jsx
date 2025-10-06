@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { isLoggedIn } from "../lib/auth";
 
 export default function Hero() {
   return (
@@ -10,11 +11,12 @@ export default function Hero() {
           <br />
           Fraîcheur,  qualité, proximité, bien-être et soutien aux agriculteurs.
         </p>
-        <div className="hero-buttons">
-          <button className="btn green">S'inscrire</button>
-          {/* 🔹 Redirection vers /login */}
-          <Link to="/login" className="btn gray">Se connecter</Link>
-        </div>
+        {!isLoggedIn() && (
+          <div className="hero-buttons">
+            <Link to="/inscription" className="btn green">S'inscrire</Link>
+            <Link to="/login" className="btn gray">Se connecter</Link>
+          </div>
+        )}
       </div>
       <img
         src="/images/hero.jpg"

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { isLoggedIn } from '../lib/auth';
 import '../assets/Header.css';
 
 const Header = () => {
@@ -13,15 +15,17 @@ const Header = () => {
                 </div>
                 
                 <nav className={`nav-menu ${isMenuOpen ? 'nav-menu-open' : ''}`}>
-                    <a href="#" className="nav-link">Accueil</a>
-                    <a href="#" className="nav-link">Marché</a>
+                    <Link to="/" className="nav-link">Accueil</Link>
+                    <Link to="/marche" className="nav-link">Marché</Link>
                     <a href="#" className="nav-link">Communauté</a>
                 </nav>
                 
-                <div className="nav-actions">
-                    <a href="#" className="nav-link">Se connecter</a>
-                    <button className="btn btn-primary">S'inscrire</button>
-                </div>
+                {!isLoggedIn() && (
+                    <div className="nav-actions">
+                        <Link to="/login" className="nav-link">Se connecter</Link>
+                        <Link to="/inscription" className="btn btn-primary">S'inscrire</Link>
+                    </div>
+                )}
 
                 <button 
                     className="mobile-menu-btn"

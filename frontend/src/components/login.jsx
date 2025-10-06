@@ -2,88 +2,71 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Footer from "../components/Footer";
 import { saveAuth } from "../lib/auth";
+import axios from "axios";
+
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState(""); // email ou téléphone
   const [password, setPassword] = useState("");
   const [role, setRole] = useState(""); // rôle choisi (agriculteur ou acheteur)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_URL = import.meta?.env?.VITE_API_URL || "http://127.0.0.1:8000";
+  // Utilise le proxy Vite: appels relatifs "/api/..." => http://localhost:8000
+  const API_URL = "";
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    if(email !== "" && password !== ""){
+      setLoading(true);
 
-  try {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ identifier, password }),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      // fallback dev
-      const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-      saveAuth(fakeUser, "dev-token");
-    } else {
-      const data = await res.json().catch(() => ({}));
-      if (data?.user || data?.token) {
-        saveAuth(data.user || null, data.token || "");
-      } else {
-        const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-        saveAuth(fakeUser, "dev-token");
+      try{
+             const res = await axios
+        .post('http://127.0.0.1:8000/api/login',{
+          email,
+          password
+        })
+        .then((res) => {
+          if(res.data.status !==200){
+            setError("Mot de passe ou email incorrect");
+          }else{
+            saveAuth(res.data.token,res.data.user)
+            localStorage.setItem('user_token',res.data.token)
+            navigate('/client')
+          }
+        })
+        .catch((err)=>{
+          console.error(err);
+        })
+      }catch(err){
+          console.error(err);
+          setError("Erreur serveur")
+      }finally{
+        setLoading(false);
       }
+     
+    }else{
+      alert("champs invalide");
     }
-
-    // 🚀 Redirection uniquement selon rôle choisi
-    if (role === "agriculteur") {
-      navigate("/profil-agriculteur");
-    } else if (role === "acheteur") {
-      navigate("/profil-acheteur");
-    } else {
-      setError("Veuillez sélectionner un rôle avant de continuer.");
-    }
-
-  } catch (err) {
-    // fallback total
-    const fakeUser = { name: identifier || "Utilisateur", email: identifier || "user@example.com" };
-    saveAuth(fakeUser, "dev-token");
-
-    if (role === "agriculteur") {
-      navigate("/profil-agriculteur");
-    } else if (role === "acheteur") {
-      navigate("/profil-acheteur");
-    } else {
-      navigate("/");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <>
       <div className="login-page">
         <div className="login-container">
           <h2>Se connecter</h2>
-          <p className="subtitle">Entrez vos informations pour accéder à votre compte FarmLink.</p>
-
+          <p className="subtitle">
+            Entrez vos informations pour accéder à votre compte FarmLink.
+          </p>
           <form className="login-form" onSubmit={handleSubmit}>
-            <label>Adresse e-mail ou numéro de téléphone</label>
+            <label>Adresse e-mail</label>
             <input
-              type="text"
-              placeholder="Ex: jean.dupont@example.com ou 06XXXXXXXX"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              type="email"
+              placeholder="Ex: jean.dupont@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
 
@@ -95,33 +78,6 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-
-            {/* Boutons radio */}
-            <div className="role-selection">
-              <label>
-                <input
-                  type="radio"
-                  name="role"
-                  value="agriculteur"
-                  checked={role === "agriculteur"}
-                  onChange={(e) => setRole(e.target.value)}
-                  required
-                />{" "}
-                Agriculteur
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="role"
-                  value="acheteur"
-                  checked={role === "acheteur"}
-                  onChange={(e) => setRole(e.target.value)}
-                  required
-                />{" "}
-                Acheteur
-              </label>
-            </div>
-
             <a href="#" className="forgot">Mot de passe oublié ?</a>
 
             {error && (

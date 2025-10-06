@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { isLoggedIn } from '../lib/auth';
 import FarmIllustration from './FarmIllustration';
 import '../assets/HeroSection.css';
 
@@ -20,14 +22,16 @@ const HeroSection = ({ data }) => {
                         <p className="hero-description">
                             {data.description}
                         </p>
-                        <div className="hero-actions">
-                            <button className="btn btn-primary btn-lg">
-                                S'inscrire
-                            </button>
-                            <button className="btn btn-secondary btn-lg">
-                                Se connecter
-                            </button>
-                        </div>
+                        {!isLoggedIn() && (
+                            <div className="hero-actions">
+                                <Link to="/inscription" className="btn btn-primary btn-lg">
+                                    S'inscrire
+                                </Link>
+                                <Link to="/login" className="btn btn-secondary btn-lg">
+                                    Se connecter
+                                </Link>
+                            </div>
+                        )}
                     </div>
                     <div className="hero-illustration">
                         <FarmIllustration />

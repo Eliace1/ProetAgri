@@ -2,73 +2,54 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
+use Illuminate\Support\Facades\Mail;
+use App\Http\Requests\RegisterRequest;
+use App\Mail\WelcomeMails;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:30',
-            'password' => 'required|string|min:6',
-            'role' => 'required|in:agriculteur,acheteur',
-            'farmName' => 'nullable|string|max:255',
-            'companyName' => 'nullable|string|max:255',
-            'avatar' => 'nullable|image|max:2048',
-            'documents.*' => 'nullable|file|max:4096',
-        ]);
+    public function signUp(RegisterRequest $request){
+        $data = $request->validated();
 
-        // upload avatar if provided
-        $avatarPath = null;
-        if ($request->hasFile('avatar')) {
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+        if($request->hasFile('profile')){
+            $path=$request->file('profile')->store('img','public');
+            $data['profile']=$path;
+        }else {
+            $data['profile'] = 'profiles/default.png'; // image par défaut
         }
 
-        // upload any identity documents (optional)
-        $docPaths = [];
-        if ($request->hasFile('documents')) {
-            foreach ((array)$request->file('documents') as $file) {
-                if ($file) {
-                    $docPaths[] = $file->store('identity_docs', 'public');
-                }
-            }
-        }
-
-        // create user
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'],
-            'role' => $validated['role'],
-            'farm_name' => $validated['farmName'] ?? null,
-            'company_name' => $validated['companyName'] ?? null,
-            'avatar' => $avatarPath,
-            'identity_docs' => $docPaths ? json_encode($docPaths) : null,
-        ]);
-
-        // Issue token if Sanctum is enabled
-        if (method_exists($user, 'createToken')) {
-            $token = $user->createToken('farmlink')->plainTextToken;
-        } else {
-            $token = null;
-        }
+        $user = User::create($data);
+        Mail::to($user->email)->send(new WelcomeMails($user));
 
         return response()->json([
-            'message' => 'Inscription réussie',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'avatar_url' => $avatarPath ? Storage::disk('public')->url($avatarPath) : null,
-            ],
-            'token' => $token,
-        ], 201);
+            'message'=>'utilisateur créé avec succés',
+            'user' => $user,
+            'status'=>201
+        ],201);
+    }
+
+    //Authentification jwt
+    public function signIn(LoginRequest $request){
+        if(!Auth::attempt($request->only('email','password'))){
+            return response()->json([
+                'message' => 'mots de passe ou email incorrect',
+                'status'=>401
+            ]);
+        }
+
+        $user = User::where('email',$request->email)->firstOrFail();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'token'=>$token,
+            'type'=>'Bearer',
+            'message'=>'utilisateur connecté avec succés',
+            'status'=>200
+        ])->cookie('jwt',$token);
     }
 }
