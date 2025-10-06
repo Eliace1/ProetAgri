@@ -9,7 +9,7 @@ import { FaShoppingCart } from "react-icons/fa";
 import { fetchProducts, fetchCategories } from "../lib/api";
 
 export default function Marketplace() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchText, setSearchText] = useState(searchParams.get("q") || "");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedAvailability, setSelectedAvailability] = useState([]);
@@ -44,10 +44,14 @@ export default function Marketplace() {
     loadCategories();
   }, []);
 
+  const navigate = useNavigate();
+
+  // Récupérer l'utilisateur courant
   useEffect(() => {
     setUser(getUser());
   }, []);
 
+  // Gestion du panier
   useEffect(() => {
     const computeCount = () => {
       const items = getCart();
@@ -57,16 +61,42 @@ export default function Marketplace() {
     computeCount();
     const onAdd = () => computeCount();
     const onStorage = (e) => {
-      if (e.key === 'farmlink_cart') computeCount();
+      if (e.key === "farmlink_cart") computeCount();
     };
-    window.addEventListener('cart:add', onAdd);
-    window.addEventListener('storage', onStorage);
+    window.addEventListener("cart:add", onAdd);
+    window.addEventListener("storage", onStorage);
     return () => {
-      window.removeEventListener('cart:add', onAdd);
-      window.removeEventListener('storage', onStorage);
+      window.removeEventListener("cart:add", onAdd);
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
 
+  // Fonction pour récupérer tous les produits depuis le localStorage
+  const getAllProducts = () => {
+    return Object.keys(localStorage)
+      .filter((key) => key.startsWith("products_"))
+      .flatMap((key) => {
+        try {
+          return JSON.parse(localStorage.getItem(key)) || [];
+        } catch {
+          return [];
+        }
+      });
+  };
+
+  // Initialisation des produits
+  useEffect(() => {
+    setProducts(getAllProducts());
+  }, []);
+
+  // Écoute les changements produits (ajout depuis le profil)
+  useEffect(() => {
+    const updateProducts = () => setProducts(getAllProducts());
+    window.addEventListener("products:changed", updateProducts);
+    return () => window.removeEventListener("products:changed", updateProducts);
+  }, []);
+
+  // Prix max dynamique
   const maxPrice = useMemo(() => {
     const max = Math.max(...products.map((p) => p.price));
     return Number.isFinite(max) ? Math.ceil(max) : 100;
@@ -76,6 +106,7 @@ export default function Marketplace() {
     setPriceRange((r) => ({ min: 0, max: Math.max(r.max, maxPrice) }));
   }, [maxPrice]);
 
+  // Filtrage texte depuis l'URL
   useEffect(() => {
     const q = searchParams.get("q") || "";
     setSearchText(q);
@@ -133,24 +164,25 @@ const normalize = (str) =>
           <ProductsGrid products={filteredProducts} />
         </div>
 
+        {/* Bouton panier flottant */}
         <button
           aria-label="Voir le panier / commandes"
-          onClick={() => navigate('/commandes')}
+          onClick={() => navigate("/commandes")}
           style={{
-            position: 'fixed',
+            position: "fixed",
             right: 20,
             bottom: 24,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
             width: 56,
             height: 56,
-            borderRadius: '9999px',
-            background: '#2563eb',
-            color: '#fff',
+            borderRadius: "9999px",
+            background: "#2563eb",
+            color: "#fff",
             border: 0,
-            boxShadow: '0 6px 20px rgba(37,99,235,.35)',
-            cursor: 'pointer',
+            boxShadow: "0 6px 20px rgba(37,99,235,.35)",
+            cursor: "pointer",
             zIndex: 50,
           }}
         >
@@ -158,20 +190,20 @@ const normalize = (str) =>
           {cartCount > 0 && (
             <span
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: -6,
                 right: -6,
                 minWidth: 20,
                 height: 20,
                 borderRadius: 10,
-                background: '#ef4444',
-                color: '#fff',
+                background: "#ef4444",
+                color: "#fff",
                 fontSize: 12,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0 6px',
-                boxShadow: '0 2px 6px rgba(0,0,0,.25)'
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 6px",
+                boxShadow: "0 2px 6px rgba(0,0,0,.25)",
               }}
             >
               {cartCount}
