@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { isLoggedIn } from '../lib/auth';
 import { addToCart } from '../lib/cart';
-import { fetchProducts } from '../lib/api'; // ← nouvelle importation
+
+const fallbackProducts = [
+
+];
 
 function formatPrice(p) {
   const n = typeof p === 'number' ? p : parseFloat(String(p).replace(',', '.'));

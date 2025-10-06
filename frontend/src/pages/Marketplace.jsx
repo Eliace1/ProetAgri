@@ -8,20 +8,21 @@ import { getCart } from "../lib/cart";
 import { FaShoppingCart } from "react-icons/fa";
 
 export default function Marketplace() {
-  // === états filtres ===
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchText, setSearchText] = useState(searchParams.get("q") || "");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100 });
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
+  const [products, setProducts] = useState([]);
   const navigate = useNavigate();
 
+  // Récupérer l'utilisateur courant
   useEffect(() => {
     setUser(getUser());
   }, []);
 
-  // initialise et synchronise le compteur du panier
+  // Gestion du panier
   useEffect(() => {
     const computeCount = () => {
       const items = getCart();
@@ -31,47 +32,58 @@ export default function Marketplace() {
     computeCount();
     const onAdd = () => computeCount();
     const onStorage = (e) => {
-      if (e.key === 'farmlink_cart') computeCount();
+      if (e.key === "farmlink_cart") computeCount();
     };
-    window.addEventListener('cart:add', onAdd);
-    window.addEventListener('storage', onStorage);
+    window.addEventListener("cart:add", onAdd);
+    window.addEventListener("storage", onStorage);
     return () => {
-      window.removeEventListener('cart:add', onAdd);
-      window.removeEventListener('storage', onStorage);
+      window.removeEventListener("cart:add", onAdd);
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
 
-  // === Tes vrais produits ===
-  const products = [
-    { id: 1, name: "Tomates Bio", price: 3.5, stock: "En stock", category: "Légumes", image: "/images/tomates.jpg", farmName: "Ferme des Collines" },
-    { id: 2, name: "Pommes de terre nouvelles", price: 2.75, stock: "Faible stock", category: "Légumes", image: "/images/pommes-de-terre.jpg", farmName: "Ferme du Val" },
-    { id: 3, name: "Blé Tendre", price: 1.2, stock: "En stock", category: "Céréales", image: "/images/ble.jpg", farmName: "Domaine des Champs" },
-    { id: 4, name: "Fromage de chèvre artisanal", price: 8.99, stock: "En stock", category: "Produits laitiers", image: "/images/fromage.jpg", farmName: "La Chèvrerie du Bois" },
-    { id: 5, name: "Œufs Fermiers (12)", price: 4.99, stock: "Faible stock", category: "Produits laitiers", image: "/images/oeufs.jpg", farmName: "Ferme des Amandiers" },
-    { id: 6, name: "Bœuf Limousin (500g)", price: 12.5, stock: "En stock", category: "Viande", image: "/images/boeuf.jpg", farmName: "Ferme Limougeaude" },
-    { id: 7, name: "Carottes Bio", price: 2.1, stock: "En stock", category: "Légumes", image: "/images/carottes.jpg", farmName: "Jardin de Louise" },
-    { id: 8, name: "Asperges Vertes", price: 5.75, stock: "Rupture de stock", category: "Légumes", image: "/images/asperges.jpg", farmName: "Les Aspergeraies" },
-    { id: 9, name: "Mélange de Baies Fraîches", price: 6.8, stock: "En stock", category: "Fruits", image: "/images/baies.jpg", farmName: "Verger du Lac" },
-  ];
+  // Fonction pour récupérer tous les produits depuis le localStorage
+  const getAllProducts = () => {
+    return Object.keys(localStorage)
+      .filter((key) => key.startsWith("products_"))
+      .flatMap((key) => {
+        try {
+          return JSON.parse(localStorage.getItem(key)) || [];
+        } catch {
+          return [];
+        }
+      });
+  };
 
-  // bornes dynamiques du prix selon les produits
+  // Initialisation des produits
+  useEffect(() => {
+    setProducts(getAllProducts());
+  }, []);
+
+  // Écoute les changements produits (ajout depuis le profil)
+  useEffect(() => {
+    const updateProducts = () => setProducts(getAllProducts());
+    window.addEventListener("products:changed", updateProducts);
+    return () => window.removeEventListener("products:changed", updateProducts);
+  }, []);
+
+  // Prix max dynamique
   const maxPrice = useMemo(() => {
     const max = Math.max(...products.map((p) => p.price));
     return Number.isFinite(max) ? Math.ceil(max) : 100;
   }, [products]);
 
   useEffect(() => {
-    // initialise la plage avec borne sup dynamique
     setPriceRange((r) => ({ min: 0, max: Math.max(r.max, maxPrice) }));
   }, [maxPrice]);
 
-  // écoute l'URL ?q= (saisie depuis la navbar)
+  // Filtrage texte depuis l'URL
   useEffect(() => {
     const q = searchParams.get("q") || "";
     setSearchText(q);
   }, [searchParams]);
 
-  // === filtrage combiné ===
+  // Filtrage combiné
   const filteredProducts = useMemo(() => {
     const knownCategories = ["Fruits", "Légumes", "Céréales", "Produits laitiers", "Viande"];
     const wantsAutres = selectedCategories.includes("Autres");
@@ -103,25 +115,26 @@ export default function Marketplace() {
           />
           <ProductsGrid products={filteredProducts} />
         </div>
+
         {/* Bouton panier flottant */}
         <button
           aria-label="Voir le panier / commandes"
-          onClick={() => navigate('/commandes')}
+          onClick={() => navigate("/commandes")}
           style={{
-            position: 'fixed',
+            position: "fixed",
             right: 20,
             bottom: 24,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
             width: 56,
             height: 56,
-            borderRadius: '9999px',
-            background: '#2563eb',
-            color: '#fff',
+            borderRadius: "9999px",
+            background: "#2563eb",
+            color: "#fff",
             border: 0,
-            boxShadow: '0 6px 20px rgba(37,99,235,.35)',
-            cursor: 'pointer',
+            boxShadow: "0 6px 20px rgba(37,99,235,.35)",
+            cursor: "pointer",
             zIndex: 50,
           }}
         >
@@ -129,20 +142,20 @@ export default function Marketplace() {
           {cartCount > 0 && (
             <span
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: -6,
                 right: -6,
                 minWidth: 20,
                 height: 20,
                 borderRadius: 10,
-                background: '#ef4444',
-                color: '#fff',
+                background: "#ef4444",
+                color: "#fff",
                 fontSize: 12,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0 6px',
-                boxShadow: '0 2px 6px rgba(0,0,0,.25)'
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 6px",
+                boxShadow: "0 2px 6px rgba(0,0,0,.25)",
               }}
             >
               {cartCount}
