@@ -113,7 +113,7 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 style={isActive('/client') ? { fontWeight: 700, textDecoration: 'underline' } : undefined}
               >
-                Acheteur
+                Mon Compte
               </Link>
             </li>
           )}
@@ -161,7 +161,7 @@ export default function Navbar() {
             </Link>
           </div>
         )}
-        {/* 👉 Bouton Déconnexion si connecté (et pas sur /marche) */}
+        {/*  Bouton Déconnexion si connecté (et pas sur /marche) */}
         {!isMarketplace && user && (
           <div className="nav-buttons">
             <button

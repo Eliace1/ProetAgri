@@ -14,7 +14,7 @@ export default function Register() {
     password: "",
     password_confirmation: "",
     address: "",
-    address:"",
+    //address:"",
     company_name: "", // utilisé pour l'adresse acheteur (compat backend)
     profile: "",
   });
