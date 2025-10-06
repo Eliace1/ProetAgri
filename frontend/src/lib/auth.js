@@ -11,17 +11,32 @@ export function saveAuth(user, token) {
 }
 
 export function getUser() {
-  try { const raw = localStorage.getItem(USER_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  try { 
+    const raw = localStorage.getItem(USER_KEY); 
+    return raw ? JSON.parse(raw) : null; 
+  } catch { 
+    return null; 
+  }
 }
 
 export function getToken() {
   try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; }
 }
 
-export function isLoggedIn() { return !!getUser(); }
+export function isLoggedIn() { 
+  return !!getUser(); 
+}
 
+/**
+ * Déconnexion améliorée : supprime user et token,
+ * puis déclenche un événement "auth:changed" pour prévenir Navbar
+ */
 export function logout() {
-  try { localStorage.removeItem(USER_KEY); localStorage.removeItem(TOKEN_KEY); } catch {}
+  try { 
+    localStorage.removeItem(USER_KEY); 
+    localStorage.removeItem(TOKEN_KEY); 
+    window.dispatchEvent(new Event("auth:changed"));  // 👈 très important
+  } catch {}
 }
 
 export function authHeader() {
