@@ -1,3 +1,4 @@
+// Orders.js
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { getCart, saveCart } from "../lib/cart";
@@ -5,27 +6,47 @@ import { getCart, saveCart } from "../lib/cart";
 export default function Orders() {
   const [items, setItems] = useState([]);
 
-  // Charger le panier depuis le stockage
   useEffect(() => {
     setItems(getCart());
   }, []);
 
-  // Total calculé
   const total = useMemo(() => items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0), [items]);
 
   const updateAndPersist = useCallback((next) => {
     setItems(next);
     saveCart(next);
+
+    // dispatch global cart event
     try { window?.dispatchEvent(new Event('cart:add')); } catch {}
-  }, []);
+
+    // si commande validée, on enregistre dans les ventes
+    if (next.length === 0 && items.length > 0) {
+      const salesKey = getSalesKey();
+      const prevSales = JSON.parse(localStorage.getItem(salesKey) || "[]");
+      const newSale = {
+        date: new Date().toISOString(),
+        ventes: items.reduce((s, it) => s + (it.qty || 1), 0),
+        revenus: items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0)
+      };
+      const nextSales = [...prevSales, newSale];
+      localStorage.setItem(salesKey, JSON.stringify(nextSales));
+      try { window.dispatchEvent(new Event('sales:changed')); } catch {}
+    }
+  }, [items]);
+
+  const getSalesKey = () => {
+    // clé spécifique à l'utilisateur
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const id = (user.email || user.name || "anon").replace(/\s+/g, "_");
+    return `sales_${id}`;
+  };
 
   const inc = (id) => {
     const next = items.map((it) => it.id === id ? { ...it, qty: (it.qty || 1) + 1 } : it);
     updateAndPersist(next);
   };
   const dec = (id) => {
-    const next = items
-      .map((it) => it.id === id ? { ...it, qty: Math.max(1, (it.qty || 1) - 1) } : it);
+    const next = items.map((it) => it.id === id ? { ...it, qty: Math.max(1, (it.qty || 1) - 1) } : it);
     updateAndPersist(next);
   };
   const changeQty = (id, v) => {
@@ -41,7 +62,6 @@ export default function Orders() {
   return (
     <div style={{ padding: "2rem 1rem", maxWidth: 1000, margin: "0 auto" }}>
       <h1 style={{ fontSize: 28, marginBottom: 16 }}>Votre Panier</h1>
-
       <section style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,.06)", marginBottom: 24 }}>
         {items.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#6b7280' }}>
