@@ -65,10 +65,53 @@ export default function Marketplace() {
           />
           <ProductsGrid products={filteredProducts} />
         </div>
-        <button onClick={() => navigate("/commandes")} className="cart-button">
-          <FaShoppingCart />
-          {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+     
+        <button
+          aria-label="Voir le panier / commandes"
+          onClick={() => navigate('/commandes')}
+          style={{
+            position: 'fixed',
+            right: 20,
+            bottom: 24,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 56,
+            height: 56,
+            borderRadius: '9999px',
+            background: '#2563eb',
+            color: '#fff',
+            border: 0,
+            boxShadow: '0 6px 20px rgba(37,99,235,.35)',
+            cursor: 'pointer',
+            zIndex: 50,
+          }}
+        >
+          <FaShoppingCart size={22} />
+          {cartCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: -6,
+                right: -6,
+                minWidth: 20,
+                height: 20,
+                borderRadius: 10,
+                background: '#ef4444',
+                color: '#fff',
+                fontSize: 12,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 6px',
+                boxShadow: '0 2px 6px rgba(0,0,0,.25)'
+              }}
+            >
+              {cartCount}
+            </span>
+          )}
         </button>
+
       </div>
       <Footer />
     </>

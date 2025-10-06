@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategorieController;
+//use App\Http\Controllers\CommandeController;
 
 
 
@@ -27,6 +28,7 @@ Route::get('/test', function (Request $request) {
 
 
 // Accès public pour la liste et les détails des produits
+//Route::post('/commandes', [CommandeController::class, 'store']);
 
 Route::get('products', [ProductController::class, 'index']); // GET /api/products -> index()
 Route::get('products/{product}', [ProductController::class, 'show']); // GET /api/products/1 -> show(1)

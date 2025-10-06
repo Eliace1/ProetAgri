@@ -63,3 +63,17 @@ export const deleteUserAccount = async (userId) => {
   const response = await axios.delete(`${API_BASE}/users/${userId}`);
   return response.data;
 };
+
+export const cancelUserOrder = async (orderId) => {
+  const response = await axios.post(`${API_BASE}/commandes/${orderId}/cancel`);
+  return response.data;
+};
+
+
+export const createOrder = async (userId, address, items) => {
+  return await axios.post(`${API_BASE}/commandes`, {
+    user_id: userId,
+    address,
+    items,
+  });
+};

@@ -47,10 +47,11 @@ export default function ProductsGrid({ products: override }) {
     <section className="products-grid">
       {items.map(p => (
         <div key={p.id} className="product-card">
-          <img src={`http://localhost:8000/storage/${p.image}`} alt={p.name} />
+          <img src={p.image} alt={p.name} />
+          {/* <img src={`http://localhost:8000/storage/${p.image}`} alt={p.name} /> */}
           <h4>{p.name}</h4>
           <p>{formatPrice(p.price)}</p>
-          <span>Quantité : {p.qte}</span>
+          {/* <span>Quantité : {p.qte}</span> */}
           <button onClick={() => onAdd(p)}>Ajouter au panier</button>
         </div>
       ))}
