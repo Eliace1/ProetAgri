@@ -22,9 +22,12 @@
 - `src/lib/auth.js`
   - `saveAuth(user, token)`, `getUser()`, `logout()`, `authHeader()`
 - `src/lib/cart.js`
-  - `getCart()`, `saveCart(items)`, `clearCart()`; déclenche un event `cart:add` pour MAJ UI
+  - `getCart()`, `saveCart(items)`, `addToCart(product, qty)`
+  - L'événement `cart:add` est déclenché par les composants (`Orders.jsx`, `ProductsGrid.jsx`) lors des actions panier
 - `src/api/orders.js`
   - `addOrder(order)`, `listMyOrders()`, `cancelOrder(id)` (mock/locale prêt à brancher backend)
+- `src/lib/api.js`
+  - `fetchProducts()`, `fetchCategories()` utilisent `import.meta.env.VITE_API_URL` comme base (`/api`)
 
 ## 4) Pages et composants
 - `Marketplace.jsx` + `FiltersSidebar.jsx` + `ProductsGrid.jsx`
@@ -68,7 +71,8 @@
 - **Où changer la logique des routes protégées ?** `src/components/ProtectedRoute.jsx`
 - **Comment ajouter une route ?** Importer la page dans `App.jsx` et ajouter `<Route path="/x" element={<Composant/>}/>` (avec `ProtectedRoute` si nécessaire)
 - **Comment brancher un backend ?**
-  - Remplacer implémentations mock de `src/api/*.js` par appels HTTP (axios/fetch) en utilisant `authHeader()`
+  - Utiliser `src/lib/api.js` (base `VITE_API_URL`) pour centraliser les appels REST (`/products`, `/categories`).
+  - Pour les endpoints nécessitant auth, ajouter `Authorization: Bearer <token>` via `authHeader()` ou l'instance Axios dédiée.
 - **Comment limiter la taille des avatars ?**
   - Avant sauvegarde, compresser/redimensionner (ex: canvas) puis convertir en Data URL
 
