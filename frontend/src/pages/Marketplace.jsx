@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import FiltersSidebar from "../components/FiltersSidebar.jsx";
 import ProductsGrid from "../components/ProductsGrid.jsx";
@@ -6,15 +6,44 @@ import Footer from "../components/Footer";
 import { getUser } from "../lib/auth";
 import { getCart } from "../lib/cart";
 import { FaShoppingCart } from "react-icons/fa";
+import { fetchProducts, fetchCategories } from "../lib/api";
 
 export default function Marketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchText, setSearchText] = useState(searchParams.get("q") || "");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedAvailability, setSelectedAvailability] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100 });
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const navigate = useNavigate();
+
+  // Récupère les produits et les catégories depuis Laravel
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des produits :", error);
+      }
+    };
+
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        setAvailableCategories(data.map((cat) => cat.name));
+      } catch (error) {
+        console.error("Erreur lors du chargement des catégories :", error);
+      }
+    };
+
+    loadProducts();
+    loadCategories();
+  }, []);
+
   const navigate = useNavigate();
 
   // Récupérer l'utilisateur courant
@@ -83,22 +112,38 @@ export default function Marketplace() {
     setSearchText(q);
   }, [searchParams]);
 
-  // Filtrage combiné
+  // Fonction de normalisation pour éviter les erreurs de casse ou d'accent
+  const normalize = (str) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  /*___________A RETENIR__________
+    / Fonction de normalisation pour comparer des chaînes de texte sans être gêné par les accents ou les majuscules
+const normalize = (str) => 
+  str // prend une chaîne de caractères en entrée
+    ?.normalize("NFD") // transforme les caractères accentués en leur forme décomposée (ex: "é" devient "e" + accent)
+    .replace(/[\u0300-\u036f]/g, "") // supprime tous les caractères d'accent (diacritiques) grâce à une expression régulière
+    .toLowerCase(); // convertit la chaîne en minuscules pour éviter les erreurs de casse
+  
+  */
+
   const filteredProducts = useMemo(() => {
-    const knownCategories = ["Fruits", "Légumes", "Céréales", "Produits laitiers", "Viande"];
-    const wantsAutres = selectedCategories.includes("Autres");
     return products.filter((p) => {
       if (searchText && !p.name.toLowerCase().includes(searchText.toLowerCase())) return false;
-      if (selectedCategories.length) {
-        const isKnown = knownCategories.includes(p.category);
-        const matchKnown = selectedCategories.includes(p.category);
-        const matchAutres = wantsAutres && !isKnown;
-        if (!(matchKnown || matchAutres)) return false;
-      }
+
+      if (
+        selectedCategories.length &&
+        (!p.category || !selectedCategories.some((cat) => normalize(cat) === normalize(p.category)))
+      ) return false;
+
+      if (
+        selectedAvailability.length &&
+        (!p.stock || !selectedAvailability.includes(p.stock))
+      ) return false;
+
       if (p.price < priceRange.min || p.price > priceRange.max) return false;
+
       return true;
     });
-  }, [searchText, selectedCategories, priceRange, products]);
+  }, [searchText, selectedCategories, selectedAvailability, priceRange, products]);
 
   return (
     <>
@@ -109,9 +154,12 @@ export default function Marketplace() {
             setSearchText={setSearchText}
             selectedCategories={selectedCategories}
             setSelectedCategories={setSelectedCategories}
+            selectedAvailability={selectedAvailability}
+            setSelectedAvailability={setSelectedAvailability}
             priceRange={priceRange}
             setPriceRange={setPriceRange}
             maxPrice={maxPrice}
+            availableCategories={availableCategories}
           />
           <ProductsGrid products={filteredProducts} />
         </div>
