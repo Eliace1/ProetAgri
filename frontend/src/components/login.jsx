@@ -32,7 +32,7 @@ export default function Login() {
           if(res.data.status !==200){
             setError("Mot de passe ou email incorrect");
           }else{
-            saveAuth(res.data.token,res.data.user)
+            saveAuth(res.data.user,res.data.token)
             localStorage.setItem('user_token',res.data.token)
             navigate('/client')
           }

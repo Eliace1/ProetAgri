@@ -5,10 +5,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategorieController;
-
-
-
-
+use App\Http\Controllers\CommandeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +38,13 @@ Route::middleware('auth:sanctum')->group(function () {
         'update',   // PUT/PATCH /api/products/1 -> Met à jour un produit
         'destroy'   // DELETE /api/products/1 -> Supprime un produit
     ]);
+    Route::get('/commandes',[CommandeController::class,'index']);
+    Route::post('/createCommande',[CommandeController::class,'create']);
+    Route::delete('/commande/{id}',[CommandeController::class,'destroy']);
+    Route::put('/commande/{id}',[CommandeController::class,'update']);
+    Route::post('/user/update',[AuthController::class,'update']);
+    Route::post('/user/delete',[AuthController::class,'delete']);
+
 });
 
 //Route pour l'enregistrement
@@ -48,3 +52,6 @@ Route::post('/register',[AuthController::class,'signUp']);
 
 //route pour le login
 Route::post('/login',[AuthController::class,'signIn']);
+
+Route::get('/createUser',[AuthController::class,'createUser']);
+

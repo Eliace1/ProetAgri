@@ -18,6 +18,7 @@ return new class extends Migration
             $table->longText('delivery_address');
             $table->string('payment_method');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            
         });
     }
 

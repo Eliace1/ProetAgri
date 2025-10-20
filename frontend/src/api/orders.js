@@ -1,8 +1,9 @@
+import Products from "@/components/products";
 import { getUser } from "../lib/auth";
-
+import axios from "axios";
 const ORDERS_KEY = "farmlink_orders";
 
-function load() {
+function loasd() {
   try {
     const raw = localStorage.getItem(ORDERS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -20,13 +21,54 @@ function buyerKey(u) {
   return u.id || u.email || u.name || "anon";
 }
 
-export function listMyOrders() {
+export async function listMyOrders() { 
+  try{
+    const res = await axios.get("http://localhost:8000/api/commandes", {
+      headers: {
+        Authorization:`Bearer ${localStorage.getItem("farmlink_token")}`,
+          "Content-Type": "application/json",
+      },
+    });
+    return res.data.commandesUsers;
+
+  }catch(err){
+    console.log("Erreur listMyOrders:", err.response?.data || err.message);
+    return [];
+  }
+}
+
+export function lisstMyOrders() {
   const user = getUser();
   const key = buyerKey(user);
   return load().filter(o => o.buyerKey === key);
 }
 
-export function addOrder(order) {
+export async function addOrder(order) {
+  try{
+     console.log(order)
+    const res = await axios.post("http://localhost:8000/api/createCommande",
+      {
+        delivery_address: order.info.address,
+        total_amount: order.total,
+        payment_method: order.method,
+        products: order.items.map((it)=>({
+          product_id: it.id,
+          quantite: it.qy || 1,
+        })),
+      },
+      {
+        headers:{
+          Authorization:`Bearer ${localStorage.getItem("farmlink_token")}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  return res.data;
+ }catch(err){
+    console.error("Erreur addOrder:", err.response?.data || err.message);
+ }
+}
+export function adddOrder(order) {
   const user = getUser();
   const list = load();
   const id = Date.now().toString();

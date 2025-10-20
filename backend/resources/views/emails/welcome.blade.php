@@ -8,7 +8,7 @@
 <body>
     <h1>Bonjour {{$user['name']}}</h1>
     <p>
-        Merci pour votre inscription chez agriconnect et profiter d'une experience d'immersion
+        Merci pour votre inscription chez FarmLink et profitez d'une experience d'immersion.
     </p>
 </body>
 </html>

@@ -14,7 +14,6 @@ export default function Register() {
     password: "",
     password_confirmation: "",
     address: "",
-    address:"",
     company_name: "", // utilisé pour l'adresse acheteur (compat backend)
     profile: "",
   });
@@ -38,31 +37,6 @@ export default function Register() {
     setForm((f) => ({ ...f, profile: file }));
   };
 
-
-  const validate = () => {
-    const e = {};
-    const emailRe = /.+@.+\..+/;
-    // Champs de base
-    if (!form.first_name?.trim()) e.first_name = "Le prénom est obligatoire.";
-    if (!form.name?.trim()) e.name = "Le nom est obligatoire.";
-    if (!form.email?.trim()) e.email = "L'email est obligatoire.";
-    else if (!emailRe.test(form.email)) e.email = "Format d'email invalide.";
-    if (!form.phone?.trim()) e.phone = "Le téléphone est obligatoire.";
-    // Mot de passe
-    if (!form.password) e.password = "Le mot de passe est obligatoire.";
-    else if (form.password.length < 6) e.password = "Minimum 6 caractères.";
-    if (!form.password_confirmation) e.password_confirmation = "Veuillez confirmer le mot de passe.";
-    else if (form.password !== form.password_confirmation) e.password_confirmation = "Les mots de passe ne correspondent pas.";
-    // Champs selon rôle
-    if (role === "acheteur" && (!form.company_name || !form.company_name.trim())) {
-      e.company_name = "L'adresse de livraison est obligatoire.";
-    }
-    if (role === "agriculteur" && (!form.address || !form.address.trim())) {
-      e.address = "L'adresse de la ferme est obligatoire.";
-    }
-    return e;
-  };
-
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -79,7 +53,6 @@ export default function Register() {
       formData.append('company_name', form.company_name);
       formData.append('farmer', role === "agriculteur" ? 1 : 0);
       formData.append('customer', role === "acheteur" ? 1 : 0);
-
 
       // Ajouter le fichier si il existe
       if (form.profile instanceof File) {

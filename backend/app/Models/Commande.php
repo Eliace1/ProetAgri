@@ -10,6 +10,7 @@ class Commande extends Model
         'total_amount',
         'delivery_address',
         'payment_method',
+        'user_id'
     ];
 
     /**
@@ -24,7 +25,7 @@ class Commande extends Model
      * Retourne la liste des produits d'une commande
      */
     public function products() {
-        return $this->belongsToMany(Product::class, 'commande_produit')
+        return $this->belongsToMany(Product::class,'commande_products')
                     ->withPivot('quantite')
                     ->withTimestamps();
     }

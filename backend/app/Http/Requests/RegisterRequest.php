@@ -30,7 +30,8 @@ class RegisterRequest extends FormRequest
             'first_name' =>['required','min:4'],
             'farmer'=>['boolean'],
             'customer'=>['boolean'],
-            'admin'=>['boolean']
+            'admin'=>['boolean'],
+            'company_name'=>['min:3']
         ];
     }
     public function messages(): array

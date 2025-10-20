@@ -6,14 +6,14 @@ import { listMyOrders, cancelOrder } from "../api/orders";
 export default function ClientDashboard() {
   const [user, setUser] = useState(getUser());
   const [orders, setOrders] = useState([]);
-  const [form, setForm] = useState({ name: "", email: "", companyName: "", phone: "", avatar: "" });
+  const [form, setForm] = useState({ name: "", email: "", companyName: "", phone: "", profile: "" });
   const [saving, setSaving] = useState(false);
   const defaultAvatar =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
         <defs>
-          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id="g" x1="0" y1="0" x2="1" 0y2="1">
             <stop offset="0%" stop-color="#dbeafe"/>
             <stop offset="100%" stop-color="#bfdbfe"/>
           </linearGradient>
@@ -32,12 +32,15 @@ export default function ClientDashboard() {
       email: u?.email || "",
       companyName: u?.companyName || "",
       phone: u?.phone || "",
-      avatar: u?.avatar || "",
+      profile: u?.profile || "",
     });
-    setOrders(listMyOrders());
+    (async () => {
+  const data = await listMyOrders();
+  setOrders(data);
+})();
   }, []);
 
-  const totalSpent = useMemo(() => orders.reduce((s, o) => s + (o.total || 0), 0), [orders]);
+  const total_amountSpent = useMemo(() => orders.reduce((s, o) => s + (o.total_amount || 0), 0), [orders]);
   const ordersCount = orders.length;
   const favoritesCount = 0; // placeholder (non utilisé)
 
@@ -46,9 +49,9 @@ export default function ClientDashboard() {
     const arr = Array.from({ length: 12 }, () => 0);
     const now = new Date();
     orders.forEach(o => {
-      const d = new Date(o.createdAt);
+      const d = new Date(o.created_at);
       const diff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
-      if (diff >= 0 && diff < 12) arr[11 - diff] += Number(o.total || 0);
+      if (diff >= 0 && diff < 12) arr[11 - diff] += Number(o.total_amount || 0);
     });
     return arr;
   }, [orders]);
@@ -62,7 +65,7 @@ export default function ClientDashboard() {
     const prevY = curM === 0 ? curY - 1 : curY;
     let cur = 0, prev = 0;
     orders.forEach(o => {
-      const d = new Date(o.createdAt);
+      const d = new Date(o.created_at);
       const y = d.getFullYear();
       const m = d.getMonth();
       if (y === curY && m === curM) cur += 1;
@@ -79,12 +82,12 @@ export default function ClientDashboard() {
   const topProducts = useMemo(() => {
     const map = new Map();
     orders.forEach((o) => {
-      if (!Array.isArray(o.items)) return;
-      o.items.forEach((it) => {
+      if (!Array.isArray(o.products)) return;
+      o.products.forEach((it) => {
         const key = it.name || `#${it.id || "?"}`;
-        const prev = map.get(key) || { name: key, qty: 0, total: 0 };
+        const prev = map.get(key) || { name: key, qty: 0, total_amount: 0 };
         prev.qty += Number(it.qty || 1);
-        prev.total += Number(it.price || 0) * Number(it.qty || 1);
+        prev.total_amount += Number(it.price || 0) * Number(it.qty || 1);
         map.set(key, prev);
       });
     });
@@ -127,14 +130,14 @@ export default function ClientDashboard() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setForm((f) => ({ ...f, avatar: reader.result }));
+      setForm((f) => ({ ...f, profile: reader.result }));
     };
     reader.readAsDataURL(file);
   };
 
   const onCancelOrder = (id) => {
-    const updated = cancelOrder(id);
-    if (updated) setOrders(listMyOrders());
+    const upcreated_atd = cancelOrder(id);
+    if (upcreated_atd) setOrders(listMyOrders());
   };
 
   // Dimensions du chart
@@ -158,20 +161,22 @@ export default function ClientDashboard() {
     return labels;
   }, []);
 
-  // Catégories: somme des montants par item.category | 'Autres'
+  // Catégories: somme des total_amounts par item.category | 'Autres'
   const categories = useMemo(() => {
     const allCategories = ['Fruits', 'Légumes', 'Céréales', 'Produits Laitiers', 'Viandes', 'Autres'];
     const map = new Map();
     orders.forEach(o => {
-      (o.items || []).forEach(it => {
-        const cat = it.category || it.cat || 'Autres';
+      (o.products || []).forEach(it => {
+        const cat = it.categorie.name || it.cat || 'Autres';
         const prev = map.get(cat) || 0;
-        map.set(cat, prev + Number(it.price || 0) * Number(it.qty || 1));
+        const montantProduits = Number(o.qty || 1)*Number(it.price || 0);
+        map.set(cat, prev + montantProduits);
+        console.log(it.name, it.qte, it.price, montantProduits);
       });
     });
     // Assure que toutes les catégories existent, même à 0
-    const arr = allCategories.map((name) => ({ name, total: map.get(name) || 0 }));
-    const sum = arr.reduce((s, a) => s + a.total, 0);
+    const arr = allCategories.map((name) => ({ name, total_amount: map.get(name) || 0 }));
+    const sum = arr.reduce((s, a) => s + a.total_amount, 0);
     return { arr, sum, allCategories };
   }, [orders]);
 
@@ -180,16 +185,12 @@ export default function ClientDashboard() {
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <img
-            src={form.avatar || user?.avatar || defaultAvatar}
-            alt="Avatar"
-            width={56}
-            height={56}
-            style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', display: 'block', background: '#e5e7eb' }}
-          />
+          <img src={user.profile} alt="Avatar" width={56} height={56} />
+
+
           <div>
             <h1 style={{ margin: 0 }}>Tableau de bord Acheteur</h1>
-            <p style={{ margin: 0, opacity: .7 }}>{user?.email}</p>
+            <p style={{ margin: 0, opacity: .7 }}>{user?.name}</p>
           </div>
         </div>
         <div>
@@ -203,7 +204,7 @@ export default function ClientDashboard() {
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div style={card()}>
           <div style={cardTitle()}>Total Dépensé</div>
-          <div style={{ fontSize: 24, fontWeight: 700 }}>{totalSpent.toFixed(2)} €</div>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{total_amountSpent.toFixed(2)} €</div>
           <div style={{ fontSize: 12, opacity: .7, marginTop: 6 }}>vs mois dernier</div>
         </div>
         <div style={card()}>
@@ -279,12 +280,12 @@ export default function ClientDashboard() {
             <Donut data={categories.arr} sum={categories.sum} />
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: 14 }}>
               {categories.arr.map((c, i) => {
-                const pct = categories.sum > 0 ? Math.round((c.total / categories.sum) * 100) : 0;
+                const pct = categories.sum > 0 ? Math.round((c.total_amount / categories.sum) * 100) : 0;
                 return (
                   <li key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <span style={{ width: 10, height: 10, borderRadius: 2, background: palette[i % palette.length] }} />
                     <span style={{ flex: 1 }}>{c.name}</span>
-                    <span style={{ color: '#6b7280', minWidth: 70, textAlign: 'right' }}>{c.total.toFixed(2)} €</span>
+                    <span style={{ color: '#6b7280', minWidth: 70, textAlign: 'right' }}>{c.total_amount.toFixed(2)} €</span>
                     <strong style={{ minWidth: 36, textAlign: 'right' }}>{pct}%</strong>
                   </li>
                 );
@@ -315,15 +316,19 @@ export default function ClientDashboard() {
               </thead>
               <tbody>
                 {orders.slice().reverse().slice(0, 8).map((o, idx) => {
-                  const first = Array.isArray(o.items) && o.items[0] ? o.items[0] : null;
-                  const qty = Array.isArray(o.items) ? o.items.reduce((s, it) => s + (it.qty || 1), 0) : 0;
+                  const first = Array.isArray(o.products) && o.products[0] ? o.products[0] : null;
+                  const qty = Array.isArray(o.products) ? o.products.reduce((s, it) => s + (it.qty || 1), 0) : 0;
                   return (
                     <tr key={o.id} style={{ background: idx % 2 ? '#ffffff' : '#f9fafb' }}>
                       <td style={thTd(true)}>FL-{o.id}</td>
-                      <td style={thTd(true)}>{first ? first.name : '—'}</td>
-                      <td style={thTd(true, 'right')}>{qty}</td>
-                      <td style={thTd(true, 'right')}>{Number(o.total).toFixed(2)} €</td>
-                      <td style={thTd(true)}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                      <td style={thTd(true)}>
+                        {(o.products || [])
+                          .map(it => `${it.name} ${it.qty || 1}`)
+                          .join(', ')}
+                      </td>
+                      <td style={thTd(true)}>{qty}</td>
+                      <td style={thTd(true, 'right')}>{Number(o.total_amount).toFixed(2)} €</td>
+                      <td style={thTd(true)}>{new Date(o.created_at).toLocaleDateString()}</td>
                       <td style={thTd(true)}>{badge(o.status)}</td>
                       <td style={thTd(true, 'right')}>
                         {o.status === 'En attente' && (
@@ -387,7 +392,7 @@ function Donut({ data, sum }) {
   const size = 140; const cx = size / 2; const cy = size / 2; const r = 45; const inner = 28;
   let angle = 0;
   const segments = data.map((d, i) => {
-    const pct = (d.total / sum) * 360;
+    const pct = (d.total_amount / sum) * 360;
     const start = angle; const end = angle + pct;
     angle = end;
     return { start, end, color: palette[i % palette.length] };

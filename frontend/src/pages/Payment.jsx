@@ -20,8 +20,9 @@ export default function Payment() {
   const total = useMemo(() => items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0), [items]);
 
   const pay = () => {
+    console.log(items,info,method)
     // Mock paiement réussi – laisse l'état par défaut "En attente"
-    addOrder({ items, total, contact: info, paymentMethod: method });
+    addOrder({ items, total, info, method });
     saveCart([]);
     try { sessionStorage.removeItem("checkout_info"); } catch {}
     navigate("/client", { replace: true });

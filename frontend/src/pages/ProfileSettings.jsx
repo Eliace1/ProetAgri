@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { getUser, saveAuth, logout } from "../lib/auth";
 import { useNavigate } from "react-router-dom";
-
+import axios from "axios";
 export default function ProfileSettings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getUser());
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", companyName: "", phone: "", avatar: "" });
+  const [form, setForm] = useState({ name: "", email: "", address: "", phone: "", profile: "" , first_name: ""});
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
 
   useEffect(() => {
@@ -15,9 +15,10 @@ export default function ProfileSettings() {
     setForm({
       name: u?.name || "",
       email: u?.email || "",
-      companyName: u?.companyName || "",
+      address: u?.address || "",
       phone: u?.phone || "",
-      avatar: u?.avatar || "",
+      profile: u?.profile || "",
+      first_name: u?.first_name || "",
     });
   }, []);
 
@@ -26,22 +27,52 @@ export default function ProfileSettings() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const onAvatarChange = (e) => {
-    const file = e.target.files && e.target.files[0];
+   const onAvatarChange = (e) => {
+    const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, avatar: reader.result }));
-    reader.readAsDataURL(file);
+    setForm((f) => ({ ...f, profile: file }));
   };
 
   const onSaveProfile = async (e) => {
     e.preventDefault();
     setSaving(true);
-    try {
-      const merged = { ...(user || {}), ...form, role: user?.role || "acheteur" };
-      saveAuth(merged, "");
-      setUser(merged);
-      try { console.info("Profil enregistré"); } catch {}
+   try {
+     
+      const formData = new FormData();
+      formData.append('first_name', form.first_name);
+      formData.append('name', form.name);
+      formData.append('email', form.email);
+      formData.append('phone', form.phone);
+      formData.append('address', form.address);
+      
+      
+      // Ajouter le fichier si il existe
+      if (form.profile instanceof File) {
+        formData.append('profile', form.profile);
+      }
+       console.log("bonsoir");
+      const res = await axios.post('http://127.0.0.1:8000/api/user/update', formData, {
+        headers: {  
+          Authorization:`Bearer ${localStorage.getItem("farmlink_token")}`,
+          'Content-Type': 'multipart/form-data' }
+      });
+
+       if(res.data.status===200){
+          const updatedUser = res.data.user;
+         saveAuth(updatedUser, "");
+       }
+
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.errors) {
+        const mapped = {};
+        Object.entries(data.errors).forEach(([k, v]) => {
+          mapped[k] = Array.isArray(v) ? v.join(' ') : v;
+        });
+        setErrors(mapped);
+      } else {
+        setErrors({ server: data?.message || "Erreur serveur" });
+      }
     } finally {
       setSaving(false);
     }
@@ -69,10 +100,10 @@ export default function ProfileSettings() {
   return (
     <div style={{ padding: 24, background: "#f9fafb", minHeight: "80vh" }}>
       <header style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-        <div style={{ width: 64, height: 64, borderRadius: 9999, backgroundSize: "cover", backgroundPosition: "center", backgroundImage: `url(${form.avatar || "/images/avatar-placeholder.png"})` }} />
+        <div style={{ width: 64, height: 64, borderRadius: 9999, backgroundSize: "cover", backgroundPosition: "center", backgroundImage: `url(${form.profile || "/images/profile-placeholder.png"})` }} />
         <div>
           <h1 style={{ margin: 0 }}>Paramètres du profil</h1>
-          <p style={{ margin: 0, opacity: .7 }}>{user?.email}</p>
+          <p style={{ margin: 0, opacity: .7 }}>{user?.name}</p>
         </div>
       </header>
 
@@ -83,10 +114,10 @@ export default function ProfileSettings() {
             <label>
               Photo de profil
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 9999, backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${form.avatar || "/images/avatar-placeholder.png"})` }} />
+                <div style={{ width: 56, height: 56, borderRadius: 9999, backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${form.profile || "/images/profile-placeholder.png"})` }} />
                 <input type="file" accept="image/*" onChange={onAvatarChange} />
-                {(form.avatar) && (
-                  <button type="button" onClick={() => setForm((f) => ({ ...f, avatar: "" }))} className="btn" style={{ padding: '6px 10px' }}>
+                {(form.profile) && (
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, profile: "" }))} className="btn" style={{ padding: '6px 10px' }}>
                     Retirer
                   </button>
                 )}
@@ -97,12 +128,16 @@ export default function ProfileSettings() {
               <input type="text" name="name" value={form.name} onChange={onChange} className="form-input" />
             </label>
             <label>
+              Prenom
+              <input type="text" name="first_name" value={form.first_name} onChange={onChange} className="form-input" />
+            </label>
+            <label>
               Email
               <input type="email" name="email" value={form.email} onChange={onChange} className="form-input" />
             </label>
             <label>
               Adresse de livraison
-              <input type="text" name="companyName" value={form.companyName} onChange={onChange} className="form-input" />
+              <input type="text" name="address" value={form.address} onChange={onChange} className="form-input" />
             </label>
             <label>
               Téléphone

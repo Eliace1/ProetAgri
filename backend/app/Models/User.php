@@ -85,4 +85,12 @@ class User extends Authenticatable
         return $this->hasMany(Commande::class);
     }
 
+    public function getProfileAttribute($value){
+
+        return $value
+            ? url('storage/' . $value)
+            : url('storage/img/default.jpg');
+    }
+
+
 }

@@ -20,7 +20,7 @@ class Product extends Model
     /**
      * Retourne l'agriculteur du produit
      */
-  
+
      public function user()
     {
         return $this->belongsTo(User::class);
@@ -43,7 +43,7 @@ class Product extends Model
      * Retourne la liste des commandes d'un produits
      */
     public function commandes() {
-        return $this->belongsToMany(Commande::class, 'commande_produit')
+        return $this->belongsToMany(Commande::class, 'commande_products')
                     ->withPivot('quantite')
                     ->withTimestamps();
     }
