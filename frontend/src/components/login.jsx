@@ -34,7 +34,11 @@ export default function Login() {
           }else{
             saveAuth(res.data.user,res.data.token)
             localStorage.setItem('user_token',res.data.token)
-            navigate('/client')
+            if(res.data.user.farmer){
+              navigate("/agriculteur");
+            }else{
+              navigate("/client");
+            }
           }
         })
         .catch((err)=>{

@@ -17,6 +17,7 @@ import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 
 import "./index.css";
+import ProfilAgriculteur from "./pages/ProfilAgriculteur";
 
 
 export default function App() {
@@ -73,15 +74,31 @@ export default function App() {
         />
 
         {/* Marché */}
-        <Route path="/marche" element={<Marketplace />} />
+        <Route path="/marche" element={<ProtectedRoute onlyCustomer={true}>
+              <>
+                <Marketplace />
+                <Footer />
+              </>
+            </ProtectedRoute>} />
 
         {/* Commandes (protégé) */}
         <Route
           path="/commandes"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute onlyCustomer={true}>
               <>
                 <Orders />
+                <Footer />
+              </>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agriculteur"
+          element={
+            <ProtectedRoute onlyFarmer={true}>
+              <>
+                <ProfilAgriculteur />
                 <Footer />
               </>
             </ProtectedRoute>
@@ -92,7 +109,7 @@ export default function App() {
         <Route
           path="/checkout"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute onlyCustomer={true}>
               <>
                 <Checkout />
                 <Footer />
@@ -105,7 +122,7 @@ export default function App() {
         <Route
           path="/paiement"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute onlyCustomer={true}>
               <>
                 <Payment />
                 <Footer />
@@ -118,7 +135,7 @@ export default function App() {
         <Route
           path="/client"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute onlyCustomer={true}>
               <>
                 <ClientDashboard />
                 <Footer />
@@ -131,7 +148,7 @@ export default function App() {
         <Route
           path="/profil"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute onlyCustomer={true}>
               <>
                 <ProfileSettings />
                 <Footer />
