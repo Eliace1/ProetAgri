@@ -18,6 +18,7 @@ import Payment from "./pages/Payment";
 
 import "./index.css";
 
+
 export default function App() {
   return (
     <Router>
@@ -58,6 +59,9 @@ export default function App() {
             </>
           }
         />
+
+         
+
         <Route
           path="/contact"
           element={

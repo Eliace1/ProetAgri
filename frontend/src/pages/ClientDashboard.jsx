@@ -169,7 +169,7 @@ export default function ClientDashboard() {
       (o.products || []).forEach(it => {
         const cat = it.categorie.name || it.cat || 'Autres';
         const prev = map.get(cat) || 0;
-        const montantProduits = Number(o.qty || 1)*Number(it.price || 0);
+        const montantProduits = Number(it.pivot.quantite || 1)*Number(it.price || 0);
         map.set(cat, prev + montantProduits);
         console.log(it.name, it.qte, it.price, montantProduits);
       });
