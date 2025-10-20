@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getUser, saveAuth } from "../lib/auth";
-import { listMyOrders, cancelOrder } from "../api/orders";
+import { getUser } from "../lib/auth";
+import { fetchUserOrders, cancelUserOrder } from "../lib/api";
 
 export default function ClientDashboard() {
   const [user, setUser] = useState(getUser());
@@ -42,9 +42,7 @@ export default function ClientDashboard() {
 
   const total_amountSpent = useMemo(() => orders.reduce((s, o) => s + (o.total_amount || 0), 0), [orders]);
   const ordersCount = orders.length;
-  const favoritesCount = 0; // placeholder (non utilisé)
 
-  // Agrégation mensuelle (12 derniers mois)
   const monthly = useMemo(() => {
     const arr = Array.from({ length: 12 }, () => 0);
     const now = new Date();
@@ -56,7 +54,6 @@ export default function ClientDashboard() {
     return arr;
   }, [orders]);
 
-  // Variation des commandes vs mois dernier
   const ordersDeltaText = useMemo(() => {
     const now = new Date();
     const curY = now.getFullYear();
@@ -78,7 +75,6 @@ export default function ClientDashboard() {
     return `${sign}${pct}% vs mois dernier`;
   }, [orders]);
 
-  // Top produits commandés (par quantité)
   const topProducts = useMemo(() => {
     const map = new Map();
     orders.forEach((o) => {
@@ -94,7 +90,21 @@ export default function ClientDashboard() {
     return Array.from(map.values()).sort((a, b) => b.qty - a.qty).slice(0, 5);
   }, [orders]);
 
-  // Mini helpers UI
+  const categories = useMemo(() => {
+    const allCategories = ['Fruits', 'Légumes', 'Céréales', 'Produits Laitiers', 'Viandes', 'Autres'];
+    const map = new Map();
+    orders.forEach(o => {
+      (o.items || []).forEach(it => {
+        const cat = it.category || it.cat || 'Autres';
+        const prev = map.get(cat) || 0;
+        map.set(cat, prev + Number(it.price || 0) * Number(it.qty || 1));
+      });
+    });
+    const arr = allCategories.map((name) => ({ name, total: map.get(name) || 0 }));
+    const sum = arr.reduce((s, a) => s + a.total, 0);
+    return { arr, sum };
+  }, [orders]);
+
   const badge = (status) => {
     const map = {
       "En attente": { bg: "#fef9c3", color: "#854d0e" },
@@ -106,22 +116,13 @@ export default function ClientDashboard() {
     return <span style={{ padding: '2px 8px', borderRadius: 999, background: s.bg, color: s.color, fontSize: 12 }}>{status}</span>;
   };
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const onSaveProfile = async (e) => {
-    e.preventDefault();
-    setSaving(true);
+  const onCancelOrder = async (id) => {
     try {
-      const merged = { ...(user || {}), ...form, role: user?.role || "acheteur" };
-      saveAuth(merged, "");
-      setUser(merged);
-      // feedback léger
-      try { console.info('Profil enregistré'); } catch {}
-    } finally {
-      setSaving(false);
+      await cancelUserOrder(id);
+      const updated = await fetchUserOrders(user.id);
+      setOrders(updated);
+    } catch (err) {
+      console.error("Erreur annulation commande :", err);
     }
   };
 
@@ -149,7 +150,6 @@ export default function ClientDashboard() {
     return `${x},${y}`;
   }).join(' ');
 
-  // Libellés des 12 derniers mois pour l'axe X
   const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
   const monthLabels = useMemo(() => {
     const labels = [];
@@ -182,7 +182,6 @@ export default function ClientDashboard() {
 
   return (
     <div className="client-dashboard" style={{ padding: 24, background: '#f9fafb' }}>
-      {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <img src={user.profile} alt="Avatar" width={56} height={56} />
@@ -193,14 +192,12 @@ export default function ClientDashboard() {
             <p style={{ margin: 0, opacity: .7 }}>{user?.name}</p>
           </div>
         </div>
-        <div>
-          <Link to="/profil" className="btn" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2563eb', color: '#2563eb', background: '#fff', textDecoration: 'none' }}>
-            Gérer mon profil
-          </Link>
-        </div>
+        <Link to="/profil" className="btn" style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2563eb', color: '#2563eb', background: '#fff', textDecoration: 'none' }}>
+          Gérer mon profil
+        </Link>
       </header>
 
-      {/* Cards */}
+            {/* Statistiques */}
       <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div style={card()}>
           <div style={cardTitle()}>Total Dépensé</div>
@@ -230,50 +227,39 @@ export default function ClientDashboard() {
         </div>
       </section>
 
-      {/* Charts */}
+      {/* Graphiques */}
       <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 24 }}>
         <div style={card()}>
           <div style={cardTitle()}>Dépenses Mensuelles</div>
           <svg width={width} height={height} style={{ width: '100%', height }}>
-            {/* Axe X */}
             <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke="#e5e7eb" />
-            {/* Grille Y + labels */}
-            {(() => {
-              const ticks = 4; // 4 lignes horizontales
-              const els = [];
-              for (let i = 0; i <= ticks; i++) {
-                const value = (maxY / ticks) * i;
-                const y = height - pad - (value / maxY) * (height - pad * 2);
-                els.push(
-                  <g key={i}>
-                    <line x1={pad} y1={y} x2={width - pad} y2={y} stroke="#f1f5f9" />
-                    <text x={pad - 8} y={y + 3} textAnchor="end" fontSize="10" fill="#94a3b8">{value.toFixed(0)}€</text>
-                  </g>
-                );
-              }
-              return els;
-            })()}
-            {/* Courbe */}
+            {[...Array(5)].map((_, i) => {
+              const value = (maxY / 4) * i;
+              const y = height - pad - (value / maxY) * (height - pad * 2);
+              return (
+                <g key={i}>
+                  <line x1={pad} y1={y} x2={width - pad} y2={y} stroke="#f1f5f9" />
+                  <text x={pad - 8} y={y + 3} textAnchor="end" fontSize="10" fill="#94a3b8">{value.toFixed(0)}€</text>
+                </g>
+              );
+            })}
             <polyline fill="none" stroke="#16a34a" strokeWidth="3" points={points} />
             {points.split(' ').map((p, i) => {
               const [x, y] = p.split(',').map(Number);
-              return <circle key={i} cx={x} cy={y} r="3" fill="#16a34a" />
+              return <circle key={i} cx={x} cy={y} r="3" fill="#16a34a" />;
             })}
-            {/* Ticks et labels mois */}
             {monthLabels.map((m, i) => {
               const x = pad + (i * (width - pad * 2)) / (monthLabels.length - 1 || 1);
-              const show = (i % 1 === 0); // afficher tous les mois (abrégés)
               return (
                 <g key={i}>
                   <line x1={x} y1={height - pad} x2={x} y2={height - pad + 4} stroke="#9ca3af" />
-                  {show && (
-                    <text x={x} y={height - pad + 16} textAnchor="middle" fontSize="10" fill="#6b7280">{m}</text>
-                  )}
+                  <text x={x} y={height - pad + 16} textAnchor="middle" fontSize="10" fill="#6b7280">{m}</text>
                 </g>
               );
             })}
           </svg>
         </div>
+
         <div style={card()}>
           <div style={cardTitle()}>Dépenses par Catégorie</div>
           <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 12, alignItems: 'center' }}>
@@ -295,7 +281,7 @@ export default function ClientDashboard() {
         </div>
       </section>
 
-      {/* Recent orders table */}
+      {/* Commandes récentes */}
       <section style={card()}>
         <div style={cardTitle()}>Historique d'Achats Récent</div>
         {orders.length === 0 ? (
@@ -305,7 +291,7 @@ export default function ClientDashboard() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ textAlign: 'left', color: '#6b7280', fontSize: 12, background: '#f8fafc' }}>
-                  <th style={thTd()}>ID Commande</th>
+                  <th style={thTd()}>ID</th>
                   <th style={thTd()}>Produit</th>
                   <th style={thTd('right')}>Quantité</th>
                   <th style={thTd('right')}>Total</th>
@@ -361,11 +347,22 @@ export default function ClientDashboard() {
 }
 
 function card() {
-  return { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,.04)' };
+  return {
+    background: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 16,
+    padding: 20,
+    boxShadow: '0 1px 4px rgba(0,0,0,.04)'
+  };
 }
+
 function cardTitle() {
-  return { fontWeight: 700, marginBottom: 10 };
+  return {
+    fontWeight: 700,
+    marginBottom: 10
+  };
 }
+
 function thTd(isBody = false, align = 'left') {
   return { padding: isBody ? '12px 10px' : '10px', borderBottom: '1px solid #f3f4f6', textAlign: align };
 }

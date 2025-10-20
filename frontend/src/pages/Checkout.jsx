@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUser } from "../lib/auth";
-import { getCart } from "../lib/cart";
+import { getCart, clearCart } from "../lib/cart";
+import { createOrder } from "../lib/api"; //  fonction API Laravel
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -26,20 +27,29 @@ export default function Checkout() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
     if (!form.address) {
       setError("Veuillez renseigner votre adresse de livraison.");
       return;
     }
+
     if (!items || items.length === 0) {
       navigate("/commandes");
       return;
     }
+
     try {
+      await createOrder(user.id, form.address, items); // ✅ envoi vers Laravel
       sessionStorage.setItem("checkout_info", JSON.stringify(form));
-    } catch {}
-    navigate("/paiement");
+      clearCart(); // vide le panier après commande
+      navigate("/paiement");
+    } catch (err) {
+      console.error("Erreur lors de la commande :", err);
+      setError("Impossible de valider la commande. Veuillez réessayer.");
+    }
   };
 
   return (
@@ -73,12 +83,19 @@ export default function Checkout() {
               <div style={{ display: 'grid', gap: 10 }}>
                 {items.map((it) => (
                   <div key={it.id} style={{ display: 'grid', gridTemplateColumns: '56px 1fr auto', gap: 10, alignItems: 'center' }}>
-                    <div style={{ width: 56, height: 42, borderRadius: 8, background: `#f3f4f6 url(${it.image || it.img || ''}) center/cover` }} />
+                    <div style={{
+                      width: 56,
+                      height: 42,
+                      borderRadius: 8,
+                      background: `#f3f4f6 url(${it.image || it.img || ''}) center/cover`
+                    }} />
                     <div>
                       <div style={{ fontWeight: 600 }}>{it.name}</div>
                       <div style={{ color: '#6b7280', fontSize: 13 }}>x{it.qty || 1}</div>
                     </div>
-                    <div style={{ fontWeight: 600 }}>{((Number(it.price)||0) * (Number(it.qty)||1)).toFixed(2)} €</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {((Number(it.price)||0) * (Number(it.qty)||1)).toFixed(2)} €
+                    </div>
                   </div>
                 ))}
               </div>
