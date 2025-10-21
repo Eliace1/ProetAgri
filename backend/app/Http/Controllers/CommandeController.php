@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CommandeRequest;
 use App\Models\User;
 use App\Models\Commande;
-use APp\Models\Product;
+use App\Models\Product;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -22,33 +22,46 @@ class CommandeController extends Controller
         ],200);
     }
 
-    public function create(CommandeRequest $request){
+    public function create(CommandeRequest $request)
+    {
         $user = Auth::user();
-        if(!$user){
+        if (!$user) {
             return response()->json([
-                'message'=>'veillez vous connecter',
-                'status'=> 401
-            ],401);
+                'message' => 'Veuillez vous connecter',
+                'status' => 401
+            ], 401);
         }
+
         $data = $request->validated();
         $data['user_id'] = $user->id;
+
         $commande = Commande::create($data);
 
-        //preparer tableau pour attacher
         $productsA = [];
-        foreach($data['products'] as $product){
-            $productsA[$product['product_id']] = ['quantite'=>$product['quantite']];
+        foreach ($data['products'] as $product) {
+            $productModel = Product::find($product['product_id']);
+
+            if ($productModel && $productModel->qte >= $product['quantite']) {
+                // Diminuer le stock
+                 $productModel->qte -= $product['quantite'];
+                 $productModel->save();
+
+                $productsA[$product['product_id']] = ['quantite' => $product['quantite']];
+            } else {
+                return response()->json([
+                    'message' => "Produit {$product['product_id']} en rupture de stock ou quantité insuffisante.",
+                    'status' => 400
+                ], 400);
+            }
         }
 
-        //Atachons les produits
         $commande->products()->attach($productsA);
 
         return response()->json([
-            'message'=>'commande créée avec succès',
+            'message' => 'Commande créée avec succès',
             'commande' => $commande->load('products'),
-            'status'=>201
-        ],201);
-
+            'status' => 201
+        ], 201);
     }
 
     public function destroy($id){

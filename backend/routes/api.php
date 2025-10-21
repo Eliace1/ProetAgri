@@ -50,7 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/commande/{id}',[CommandeController::class,'update']);
     Route::post('/user/update',[AuthController::class,'update']);
     Route::post('/user/delete',[AuthController::class,'delete']);
-
+    Route::post('/user/change_password',[AuthController::class,'changePassword']);
 });
 
 //Route pour l'enregistrement
