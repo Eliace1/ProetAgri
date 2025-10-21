@@ -8,6 +8,7 @@ export default function ProfileSettings() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", address: "", phone: "", profile: "" , first_name: ""});
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
+  const [errors, setErrors]=useState({});
 
   useEffect(() => {
     const u = getUser();
@@ -77,24 +78,65 @@ export default function ProfileSettings() {
       setSaving(false);
     }
   };
-
-  const onChangePassword = (e) => {
+  const onChangePassword = async (e) => {
     e.preventDefault();
     if (!passwords.next || passwords.next !== passwords.confirm) {
       alert("Les nouveaux mots de passe ne correspondent pas.");
       return;
     }
-    // Placeholder: appel API à implémenter côté backend.
-    setPasswords({ current: "", next: "", confirm: "" });
-    alert("Mot de passe mis à jour (exemple)");
+
+    try {
+      const res = await axios.post('http://127.0.0.1:8000/api/user/change_password', {
+        old_password: passwords.current,
+        new_password: passwords.next,
+        new_password_confirmation: passwords.confirm,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("farmlink_token")}`,
+        }
+      });
+
+      alert(res.data.message || "Mot de passe modifié !");
+      setErrors({});
+      setPasswords({ current: "", next: "", confirm: "" });
+
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.errors) {
+        const mapped = {};
+        Object.entries(data.errors).forEach(([k, v]) => {
+          mapped[k] = Array.isArray(v) ? v.join(' ') : v;
+        });
+        setErrors(mapped);
+      } else {
+        setErrors({ server: data?.message || "Erreur serveur" });
+      }
+  }
+}
+
+
+  const handledelete = async () =>{
+    try{
+    const res = await axios.post("http://localhost:8000/api/user/delete", {},{
+      headers: {
+        Authorization:`Bearer ${localStorage.getItem("farmlink_token")}`,
+          "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+
+  }catch(err){
+    console.log(err.response?.data || err.message);
+  }
   };
 
   const onDeleteAccount = () => {
     const ok = confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.");
     if (!ok) return;
+    handledelete();
     // Placeholder: requête backend pour supprimer réellement le compte.
-    logout();
-    navigate("/", { replace: true });
+     logout();
+     navigate("/", { replace: true });
   };
 
   return (
@@ -123,26 +165,66 @@ export default function ProfileSettings() {
                 )}
               </div>
             </label>
-            <label>
-              Nom
-              <input type="text" name="name" value={form.name} onChange={onChange} className="form-input" />
-            </label>
-            <label>
-              Prenom
-              <input type="text" name="first_name" value={form.first_name} onChange={onChange} className="form-input" />
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" value={form.email} onChange={onChange} className="form-input" />
-            </label>
-            <label>
-              Adresse de livraison
-              <input type="text" name="address" value={form.address} onChange={onChange} className="form-input" />
-            </label>
-            <label>
-              Téléphone
-              <input type="tel" name="phone" value={form.phone} onChange={onChange} className="form-input" />
-            </label>
+           <label>
+            Nom
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={onChange}
+              className="form-input"
+            />
+            {errors?.name && <small style={{ color: "red" }}>{errors.name}</small>}
+          </label>
+
+          <label>
+            Prénom
+            <input
+              type="text"
+              name="first_name"
+              value={form.first_name}
+              onChange={onChange}
+              className="form-input"
+            />
+            {errors?.first_name && <small style={{ color: "red" }}>{errors.first_name}</small>}
+          </label>
+
+          <label>
+            Email
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={onChange}
+              className="form-input"
+            />
+            {errors?.email && <small style={{ color: "red" }}>{errors.email}</small>}
+          </label>
+
+          <label>
+            Adresse de livraison
+            <input
+              type="text"
+              name="address"
+              value={form.address}
+              onChange={onChange}
+              className="form-input"
+            />
+            {errors?.address && <small style={{ color: "red" }}>{errors.address}</small>}
+          </label>
+
+          <label>
+            Téléphone
+            <input
+              type="tel"
+              name="phone"
+              value={form.phone}
+              onChange={onChange}
+              className="form-input"
+            />
+            {errors?.phone && <small style={{ color: "red" }}>{errors.phone}</small>}
+          </label>
+
             <button type="submit" className="btn" disabled={saving} style={{ width: 'fit-content' }}>
               {saving ? 'Sauvegarde...' : 'Enregistrer'}
             </button>
@@ -151,23 +233,29 @@ export default function ProfileSettings() {
 
         <div style={card()}>
           <div style={title()}>Sécurité</div>
-          <form onSubmit={onChangePassword} style={{ display: 'grid', gap: 12, maxWidth: 520 }}>
-            <label>
-              Mot de passe actuel
-              <input type="password" name="current" value={passwords.current} onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))} className="form-input" />
-            </label>
-            <label>
-              Nouveau mot de passe
-              <input type="password" name="next" value={passwords.next} onChange={(e) => setPasswords((p) => ({ ...p, next: e.target.value }))} className="form-input" />
-            </label>
-            <label>
-              Confirmer le mot de passe
-              <input type="password" name="confirm" value={passwords.confirm} onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))} className="form-input" />
-            </label>
-            <button type="submit" className="btn" style={{ width: 'fit-content' }}>
-              Mettre à jour le mot de passe
-            </button>
-          </form>
+            <form onSubmit={onChangePassword} style={{ display: 'grid', gap: 12, maxWidth: 520 }}>
+              <label>
+                Mot de passe actuel
+                <input type="password" name="current" value={passwords.current}
+                  onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))} className="form-input" />
+                {errors.old_password && <small style={{ color: "red" }}>{errors.old_password}</small>}
+              </label>
+
+              <label>
+                Nouveau mot de passe
+                <input type="password" name="next" value={passwords.next}
+                  onChange={(e) => setPasswords((p) => ({ ...p, next: e.target.value }))} className="form-input" />
+                {errors.new_password && <small style={{ color: "red" }}>{errors.new_password}</small>}
+              </label>
+
+              <label>
+                Confirmer le mot de passe
+                <input type="password" name="confirm" value={passwords.confirm}
+                  onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))} className="form-input" />
+              </label>
+
+              <button type="submit" className="btn">Mettre à jour le mot de passe</button>
+            </form>
         </div>
 
         <div style={card({ borderColor: '#fee2e2' })}>
@@ -188,3 +276,4 @@ function card(extra) {
 function title(extra) {
   return { fontWeight: 700, marginBottom: 10, color: extra?.color || '#111827' };
 }
+

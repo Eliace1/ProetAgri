@@ -33,6 +33,33 @@ class AuthController extends Controller
         ],201);
     }
 
+    // app/Http/Controllers/UserController.php
+    public function changePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'old_password' => ['required'],
+            'new_password'=>['required','confirmed','min:8','regex:/[A-Z]/','regex:/[0-9]/','regex:/[@$!%*?&]/'], // besoin de new_password_confirmation
+        ],[
+            'new_password.confirmed'=>'Les mots de passes ne correspondent pas',
+            'new_password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'new_password.regex' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial.',
+        ]);
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json(['errors' =>
+            ['old_password' => ['Ancien mot de passe incorrect.']]
+        ], 400);
+        }
+
+        $user->password = $request->new_password;
+        $user->save();
+
+        return response()->json(['message' => 'Mot de passe modifié avec succès']);
+    }
+
+
     public function Update(Request $request){
 
         $user = Auth::user();
@@ -42,6 +69,8 @@ class AuthController extends Controller
             'address'=> ['required','min:4'],
             'phone'=> ['required','regex:/^0[1-9][0-9]{8}$/'],
             'first_name' =>['required','min:4'],
+        ],[
+            'phone'=> 'Le numero de telephone est invalide'
         ]);
        if ($request->hasFile('profile')) {
         // Supprime l'ancienne image si elle existe et n'est pas default
@@ -107,7 +136,6 @@ User::create([
   'customer' => false,
   'admin' => false,
   'password' => Hash::make('1234'),
-  'profile' => 'dupont.jpg',
 ]);
 
 // Martin
@@ -122,7 +150,6 @@ User::create([
   'customer' => false,
   'admin' => false,
   'password' => Hash::make('1234'),
-  'profile' => 'martin.jpg',
 ]);
 
 // Durand
@@ -137,7 +164,6 @@ User::create([
   'customer' => true,
   'admin' => false,
   'password' => Hash::make('1234'),
-  'profile' => 'durand.jpg',
 ]);
 
 // Admin
@@ -152,7 +178,6 @@ User::create([
   'customer' => false,
   'admin' => true,
   'password' => Hash::make('admin'),
-  'profile' => 'admin.png',
 ]);
     }
 }

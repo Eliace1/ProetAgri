@@ -53,8 +53,28 @@ export default function Navbar() {
           <li><Link to="/marche" style={isActive('/marche') ? { fontWeight: 700 } : undefined}>Marché</Link></li>
           <li><Link to="/apropos" style={isActive('/apropos') ? { fontWeight: 700 } : undefined}>À Propos</Link></li>
           <li><Link to="/contact" style={isActive('/contact') ? { fontWeight: 700 } : undefined}>Contact</Link></li>
-          {user && <li><Link to="/commandes" style={isActive('/commandes') ? { fontWeight: 700 } : undefined}>Commandes</Link></li>}
-          {user && <li><Link to="/profil-agriculteur" style={isActive('/profil-agriculteur') ? { fontWeight: 700 } : undefined}>Mon Profil</Link></li>}
+          {user?.customer && (
+            <li>
+              <Link
+                to="/commandes"
+                style={isActive('/commandes') ? { fontWeight: 700 } : undefined}
+              >
+                Commandes
+              </Link>
+            </li>
+          )}
+
+          {user && (
+            <li>
+              <Link
+                to={user.farmer ? "/agriculteur" : "/client"}
+                style={isActive(user.farmer ? '/agriculteur' : '/client') ? { fontWeight: 700 } : undefined}
+              >
+                Mon Profil
+              </Link>
+            </li>
+          )}
+
         </ul>
 
         {!user && (

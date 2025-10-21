@@ -43,6 +43,7 @@ export default function Login() {
         })
         .catch((err)=>{
           console.error(err);
+          setError("Mot de Passe ou addresse email incorrect")
         })
       }catch(err){
           console.error(err);
